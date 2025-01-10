@@ -4,3 +4,4 @@
 - [ ] lists
 - [ ] enums
 - [ ] readonly for required fields and nullable for others
+- [ ] instead of flat models for a path get those with all their dependency classes and their recursive dependencies

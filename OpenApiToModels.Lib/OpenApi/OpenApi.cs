@@ -10,7 +10,7 @@ namespace OpenApiToModels.Lib.OpenApi;
 public static class OpenApi
 {
     public static async Task<(OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic)> LoadFromApiAsync(
-        string url = "https://developer.octopia-io.net/wp-content/uploads/2024/02/Seller_02_12_2024.yaml",
+        string url = "",
         CancellationToken ct = default)
     {
         var httpClient = new HttpClient();
