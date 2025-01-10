@@ -42,7 +42,6 @@ riderModule.iml
 **/.idea/**/modules.xml
 **/.idea/*
 
-**/release/*
 *.suo
 *.user
 .vs/
@@ -54,3 +53,4 @@ _UpgradeReport_Files/
 Thumbs.db
 Desktop.ini
 .DS_Store
+/release/
