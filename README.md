@@ -1,4 +1,8 @@
 # OpenApi to Class-Models Converter
+
+https://vincepr.github.io/OpenApiToModels/
+
+### Todos
 - [x] goal is just quickly get the corresponding c# models for a api path from a OpenApi document.
 - [ ] should run in the browser, best if hosted on github pages
 - [ ] lists
