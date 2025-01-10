@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RootNamespace>OpenApiToModels.Demo</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -20,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\OpenApiToModels.Lib\OpenApiToModels.Lib.csproj" />
+      <ProjectReference Include="..\Lib\Lib.csproj" />
     </ItemGroup>
 
 </Project>
