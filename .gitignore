@@ -42,7 +42,7 @@ riderModule.iml
 **/.idea/**/modules.xml
 **/.idea/*
 
-/release/*
+**/release/*
 *.suo
 *.user
 .vs/
