@@ -9,7 +9,7 @@ page live at: https://vincepr.github.io/OpenApi/
 - [ ] enums
 - [ ] readonly for required fields and nullable for others
 - [ ] instead of flat models for a path get those with all their dependency classes and their recursive dependencies
-
+- [ ] AnyOf, OneOf, AllOf
 
 ## Notes
 ### for open api 3.0

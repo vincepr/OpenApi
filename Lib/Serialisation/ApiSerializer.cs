@@ -15,11 +15,11 @@ public class ApiSerializer
     private ushort _depth;
     private bool _isFirstClass = true;
 
-    public ApiSerializer(OpenApiDiagnostic? openApiDiagnostic = null)
+    public ApiSerializer(ApiSerializerConfig? config, OpenApiDiagnostic? openApiDiagnostic = default)
     {
         _openApiDiagnostic = openApiDiagnostic;
         _str = new StringBuilder();
-        _config = new ApiSerializerConfig();
+        _config = config ?? new ApiSerializerConfig();
         _depth = 0;
     }
 
@@ -60,7 +60,7 @@ public class ApiSerializer
     {
         if (_config.IsCamelCase) name = name.ToTitleCase();
 
-        switch (((param.Type??string.Empty).ToLowerInvariant(), (param.Format??string.Empty).ToLowerInvariant()))
+        switch (((param.Type ?? string.Empty).ToLowerInvariant(), (param.Format ?? string.Empty).ToLowerInvariant()))
         {
             case (null, _):
                 return; // TODO: currently we serialize summary and examples! if we skipp here. Stop doing that. 
@@ -171,9 +171,10 @@ public class ApiSerializer
         Tab().Append("/// ").AppendLine(endTag);
     }
 
-    public static string Serialize(IEnumerable<OpenApiSchema> schemata, OpenApiDiagnostic? diagnostic)
+    public static string Serialize(
+        IEnumerable<OpenApiSchema> schemata, OpenApiDiagnostic? diagnostic, ApiSerializerConfig? config = default)
     {
-        var serializer = new ApiSerializer(diagnostic);
+        var serializer = new ApiSerializer(config, diagnostic);
         foreach (var schema in schemata) serializer.Add(schema);
         return serializer.Build();
     }
@@ -202,45 +203,45 @@ internal static class ApiSerializerExt
     }
 }
 
-internal record ApiSerializerConfig
+public record ApiSerializerConfig
 {
     /// <summary>
     /// The characters used for indentation. Default is tab or 2 or 4 spaces.
     /// </summary>
-    public string Tab { get; init; } = "    ";
+    public string Tab { get; set; } = "    ";
 
     /// <summary>
     /// If description-data is existing add summary encased in summary-xml-tags.
     /// </summary>
-    public bool IsCommentsActive { get; init; } = true;
+    public bool IsCommentsActive { get; set; } = true;
 
     /// <summary>
     /// If example-data is existing add summary encased in summary-xml-tags.
     /// </summary>
-    public bool IsExamplesActive { get; init; } = false;
+    public bool IsExamplesActive { get; set; } = false;
 
     /// <summary>
     /// class vs record(struct).
     /// </summary>
-    public string DefaultClassName { get; init; } = "public record ";
+    public string DefaultClassName { get; set; } = "public record ";
 
     /// <summary>
     /// List vs IReadonlyList.
     /// </summary>
-    public string List { get; init; } = "List<";
+    public string List { get; set; } = "List<";
 
     /// <summary>
     /// Capital first letter or leave all property names untouched.
     /// </summary>
-    public bool IsCamelCase { get; init; } = true;
+    public bool IsCamelCase { get; set; } = true;
 
     /// <summary>
     /// Newlines between classes and fields.
     /// </summary>
-    public bool IsNoNewlines { get; init; } = false;
+    public bool IsNoNewlines { get; set; } = false;
 
     /// <summary>
     /// Enforce newline for every summary tag. Even when below the max character limit.
     /// </summary>
-    public bool IsEnforceSummaryNewlines { get; init; } = true;
+    public bool IsEnforceSummaryNewlines { get; set; } = true;
 }

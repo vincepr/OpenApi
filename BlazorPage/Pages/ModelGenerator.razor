@@ -7,7 +7,8 @@
 <h1>Model-Generator</h1>
 
 <p role="status">Current count: @currentCount</p>
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+<button class="btn btn-primary" @onclick="IncrementCount">Load Api file</button>
+<button class="btn btn-primary" @onclick="IncrementCount">Generate Models</button>
 
 <div class="container">
     <textarea class="left-textarea" @bind="inputText"></textarea>
@@ -17,8 +18,9 @@
 <style>
 .container {
     display: flex;
-    height: 100vh; /* Full screen height */
-    width: 100%;  /* Ensure the container spans the full width */
+    flex: 0 1 auto;
+    /*height: 100%; !* Full screen height *!*/
+    /*width: 100%;  !* Ensure the container spans the full width *!*/
 }
 textarea {
     flex-grow: 1; /* Allow the textareas to grow and take all available space */

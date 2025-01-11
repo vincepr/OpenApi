@@ -1,7 +1,362 @@
 ﻿@page "/"
 
 <PageTitle>Home</PageTitle>
+@using OpenApiToModels.Lib.OpenApi
+@using OpenApiToModels.Lib.Serialisation
+@inject HttpClient Http
 
-<h1>Hello, world!</h1>
+@* <p role="status">Current count: @currentCount</p> *@
+<div class="nav-box dark4">
+    <nav class="nav-left">
+        <button class="button" @onclick="ImportFile">Upload Api file</button>
+    </nav>
+    <nav class="nav-right">
+        <button class="button green " @onclick="CreateModels" id="btncompile">Generate ▶</button>
+        <div>
+            <label>Use Tab</label><input class="toggle" type="checkbox" @bind="IsTab"/>
+        </div>
+        <div>
+            <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
+        </div>
+        <div>
+            <label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/>
+        </div>
+        <div>
+            <label>Use Record</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
+        </div>
+        <div>
+            <label>Readonly List</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
+        </div>
+        <div>
+            <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
+        </div>
+        <div>
+            <label>Summary Lines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
+        </div>
+    </nav>
+</div>
 
-Welcome to your new app.
+<div class="container">
+    <textarea class="left-textarea" @bind="InputText"></textarea>
+    <textarea class="right-textarea" @bind="OutputText"></textarea>
+</div>
+
+@code {
+    private string InputText { get; set; } = "";
+    private string OutputText { get; set; } = "";
+    private ApiSerializerConfig Config { get; set; } = new();
+    private bool IsRecord { get; set; } = false;
+    private bool IsTab { get; set; } = false;
+    private bool IsReadonlyList { get; set; } = false;
+    
+
+    private void CreateModels()
+    {
+        Config.Tab = IsTab ? "\t" : "    ";
+        Config.DefaultClassName = IsRecord ? "public record " : "public class ";
+        Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
+        
+        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(InputText);
+        // var schemata = openApiDocument
+        //     .ToApiResponsesForMatcher("/order")
+        //     .ToApiResponses(isOnlySuccessStatusCode: false)
+        //     .ToFlatSchemata(openApiDocument);
+        var schemata = openApiDocument.Components.Schemas.Select(s => s.Value);
+
+        var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
+        OutputText = orderModelsTxt;
+    }
+
+    private async Task ImportFile()
+    {
+        var str = await Http.GetStringAsync("sample-data/weathercontroller.json");
+        InputText = str;
+        var x = @"{
+  ""openapi"": ""3.0.1"",
+  ""info"": {
+    ""title"": ""WebApplication3"",
+    ""version"": ""1.0""
+  },
+  ""paths"": {
+    ""/weatherforecast"": {
+      ""get"": {
+        ""tags"": [
+          ""WebApplication3""
+        ],
+        ""operationId"": ""GetWeatherForecast"",
+        ""responses"": {
+          ""200"": {
+            ""description"": ""OK"",
+            ""content"": {
+              ""application/json"": {
+                ""schema"": {
+                  ""type"": ""array"",
+                  ""items"": {
+                    ""$ref"": ""#/components/schemas/WeatherForecast""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  ""components"": {
+    ""schemas"": {
+      ""DateOnly"": {
+        ""type"": ""object"",
+        ""properties"": {
+          ""year"": {
+            ""type"": ""integer"",
+            ""format"": ""int32""
+          },
+          ""month"": {
+            ""type"": ""integer"",
+            ""format"": ""int32""
+          },
+          ""day"": {
+            ""type"": ""integer"",
+            ""format"": ""int32""
+          },
+          ""dayOfWeek"": {
+            ""$ref"": ""#/components/schemas/DayOfWeek""
+          },
+          ""dayOfYear"": {
+            ""type"": ""integer"",
+            ""format"": ""int32"",
+            ""readOnly"": true
+          },
+          ""dayNumber"": {
+            ""type"": ""integer"",
+            ""format"": ""int32"",
+            ""readOnly"": true
+          }
+        },
+        ""additionalProperties"": false
+      },
+      ""DayOfWeek"": {
+        ""enum"": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        ""type"": ""integer"",
+        ""format"": ""int32""
+      },
+      ""WeatherForecast"": {
+        ""type"": ""object"",
+        ""properties"": {
+          ""date"": {
+            ""$ref"": ""#/components/schemas/DateOnly""
+          },
+          ""temperatureC"": {
+            ""type"": ""integer"",
+            ""format"": ""int32""
+          },
+          ""temperatureF"": {
+            ""type"": ""integer"",
+            ""format"": ""int32"",
+            ""readOnly"": true
+          },
+          ""summary"": {
+            ""type"": ""string"",
+            ""nullable"": true
+          }
+        },
+        ""additionalProperties"": false
+      }
+    }
+  }
+}";
+
+    }
+
+}
+
+<style>
+/* CHECKBOX STYLING */
+.nav-box{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  background-color: #f1f3f5;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+.nav-left {
+  text-align: left;
+  padding: 10px 0px;
+  font-size: 1rem;
+}
+.nav-right {
+  align-items: center;
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  text-align: right;
+  padding: 10px 0px;
+  font-size: 1rem;
+}
+
+label {
+  display:flex;
+  text-align: justify;
+  justify-content: center;
+  justify-self: center;
+}
+/* BUTTON STYLING*/
+.button {
+	display: inline-block;
+  margin: 5px 2px 5px 2px;
+  padding: 0.75rem 0.75rem;
+	border: 0;
+	border-radius: 0.317rem;
+	color: #fff;
+	text-decoration: none;
+	font-weight: 700;
+	font-size: 1rem;
+  line-height: 1.5;
+	font-family: "Helvetica Neue", Arial, sans-serif;
+	cursor: pointer;
+	-webkit-font-smoothing: antialiased;
+	background-color: #aaa;
+}
+
+.fileopen{
+  border: solid #191a198a;
+  background-color: #4E9F3D;
+	box-shadow: inset 0 3px 4px hsla(0, 0%, 0%, 0.2);
+}
+
+.button:hover {
+	opacity: 0.85;
+}
+
+.button:active {
+	box-shadow: inset 0 3px 4px hsla(0, 0%, 0%, 0.2);
+  outline: thin dotted #444;
+  outline: 5px auto -webkit-focus-ring-color;
+  outline-offset: -2px;
+}
+
+.green {
+	background-color: #4E9F3D;
+}
+
+/*text boxes:*/
+.container {
+    display: flex;
+    height: 80vh;
+    width: 100%;
+    max-width: 100%;
+}
+@@media (max-width: 841px) {
+    .container {
+        flex-direction: column;
+        align-items: baseline;
+    }
+}
+textarea {
+    resize: none;
+    flex: 1 1 auto;
+    flex-grow: 1;
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+}
+.left-textarea {
+    margin-right: 5px;
+    min-height: 600px;
+}
+.right-textarea {
+    min-height: 600px;
+    margin-left: 5px;
+}
+@@media (max-width: 841px) {
+    .left-textarea {
+        min-height: 250px;
+        margin-bottom: 5px;
+        margin-right: 0;
+    }
+    .right-textarea {
+        margin-top: 5px;
+        margin-left: 0;
+    }
+}
+
+/* CSS FOR TOGGLE BUTTONS*/
+.toggle {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 62px;
+  height: 32px;
+  display: inline-block;
+  position: relative;
+  border-radius: 50px;
+  overflow: hidden;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  background-color: #707070;
+  transition: background-color ease 0.3s;
+}
+
+.toggle:before {
+  content: "on off";
+  display: block;
+  position: absolute;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  background: #fff;
+  left: 2px;
+  top: 2px;
+  border-radius: 50%;
+  font: 10px/28px Helvetica;
+  text-transform: uppercase;
+  font-weight: bold;
+  text-indent: -22px;
+  word-spacing: 37px;
+  color: #fff;
+  text-shadow: -1px -1px rgba(0,0,0,0.15);
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  transition: all cubic-bezier(0.3, 1.5, 0.7, 1) 0.3s;
+}
+
+.toggle:checked {
+  background-color: #4E9F3D;;
+}
+
+.toggle:checked:before {
+  left: 32px;
+}
+
+.dark1Active{
+  background-color: #1E5128 !important;
+}
+.dark2Active{
+  background-color: #4E9F3D !important;
+}
+.dark2Active .fileopen {
+  background-color: #aaa !important;
+}
+.dark3Active{
+  background-color:#252526 !important;
+  color:#f1f3f5;
+}
+.dark4Active{
+  background-color: #1e1e1e !important;
+  color:#f1f3f5;
+}
+</style>
