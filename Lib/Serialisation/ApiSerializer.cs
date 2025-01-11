@@ -60,14 +60,14 @@ public class ApiSerializer
     {
         if (_config.IsCamelCase) name = name.ToTitleCase();
 
-        switch ((param.Type, param.Format))
+        switch (((param.Type??string.Empty).ToLowerInvariant(), (param.Format??string.Empty).ToLowerInvariant()))
         {
             case (null, _):
                 return; // TODO: currently we serialize summary and examples! if we skipp here. Stop doing that. 
-            case ("integer", "int32"):
+            case ("integer", "int32") or ("number", "int32"):
                 Tab().Append("public required int ").Append(name).AppendLine(" { get; set; }");
                 break;
-            case ("integer", "int64"):
+            case ("integer", "int64") or ("number", "int63"):
                 Tab().Append("public required long ").Append(name).AppendLine(" { get; set; }");
                 break;
             case ("integer", _):
@@ -78,6 +78,9 @@ public class ApiSerializer
                     throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
                 }
 
+                break;
+            case ("number", "int64"):
+                Tab().Append("public required long ").Append(name).AppendLine(" { get; set; }");
                 break;
             case ("number", "double"):
                 Tab().Append("public required double ").Append(name).AppendLine(" { get; set; }");
@@ -108,6 +111,11 @@ public class ApiSerializer
                 Tab().Append("public required object ").Append(name).AppendLine(" { get; set; }");
                 break;
             default:
+                return;
+                // TODO: handle AllOf | OneOf |AnyOf (eg for enums)
+                var x = param.AllOf;
+                var y = param.OneOf;
+                var z = param.AnyOf;
                 Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
                 throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
                 break;
