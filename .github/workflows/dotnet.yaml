@@ -22,8 +22,8 @@ jobs:
         run: dotnet publish BlazorPage/BlazorPage.csproj -c Release -o release --nologo
         
       # changes the base-tag in index.html from '/' to 'OpenApiToModels' to match GitHub Pages repository subdirectory
-      - name: Change base-tag in index.html from / to OpenApiToModels
-        run: sed -i 's/<base href="\/" \/>/<base href="\/OpenApiToModels\/" \/>/g' release/wwwroot/index.html
+      - name: Change base-tag in index.html from / to OpenApi
+        run: sed -i 's/<base href="\/" \/>/<base href="\/OpenApi\/" \/>/g' release/wwwroot/index.html
 
       - name: copy index.html to 404.html
         run: cp release/wwwroot/index.html release/wwwroot/404.html
