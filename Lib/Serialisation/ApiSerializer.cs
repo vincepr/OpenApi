@@ -180,8 +180,7 @@ internal static class ApiSerializerExt
         using var exampleWriter = new StringWriter();
         var writer = new OpenApiJsonWriter(exampleWriter);
         example?.Write(writer, openApiVersion);
-        var toEncloseString = exampleWriter.ToString();
-        return toEncloseString;
+        return exampleWriter.ToString();
     }
 
     public static string ToTitleCase(this string str)

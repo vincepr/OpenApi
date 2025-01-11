@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.Serialization;
+using System.Text;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
@@ -9,21 +10,26 @@ namespace OpenApiToModels.Lib.OpenApi;
 
 public static class OpenApi
 {
-    public static async Task<(OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic)> LoadFromApiAsync(
-        string url = "",
-        CancellationToken ct = default)
+    public static (OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic) LoadFromText(string inputText)
     {
-        var httpClient = new HttpClient();
-
-        var stream = await httpClient.GetStreamAsync(url, ct);
-
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(inputText));
         var openApiDocument = new OpenApiStreamReader().Read(stream, out var diagnostic);
         return (openApiDocument, diagnostic);
+    }
+    
+    public static async Task<(OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic)> LoadFromApiAsync(
+        string url,
+        CancellationToken ct = default)
+    {
+        using var httpClient = new HttpClient();
+        await using var stream = await httpClient.GetStreamAsync(url, ct);
+        var result = await new OpenApiStreamReader().ReadAsync(stream, ct);
+        return (result.OpenApiDocument, result.OpenApiDiagnostic);
     }
 
     public static string SerializeApiDocument(
         OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic, OpenApiFormat targetFormat = OpenApiFormat.Json)
-        => openApiDocument.Serialize(diagnostic.SpecificationVersion, OpenApiFormat.Yaml)
+        => openApiDocument.Serialize(diagnostic.SpecificationVersion, targetFormat)
            ?? throw new SerializationException();
 
     public static IEnumerable<OpenApiPathItem> ToApiResponsesForMatcher(

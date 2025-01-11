@@ -316,3 +316,4 @@ paket-files/
 __pycache__/
 *.pyc
 
+/Lib.Tests/integrationtests/samplefiles/

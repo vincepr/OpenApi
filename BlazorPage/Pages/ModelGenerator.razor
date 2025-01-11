@@ -1,0 +1,57 @@
+﻿@page "/model-generator"
+@using OpenApiToModels.Lib.OpenApi
+@using OpenApiToModels.Lib.Serialisation
+
+<PageTitle>Model-Generator</PageTitle>
+
+<h1>Model-Generator</h1>
+
+<p role="status">Current count: @currentCount</p>
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+<div class="container">
+    <textarea class="left-textarea" @bind="inputText"></textarea>
+    <textarea class="right-textarea" @bind="outputText"></textarea>
+</div>
+
+<style>
+.container {
+    display: flex;
+    height: 100vh; /* Full screen height */
+    width: 100%;  /* Ensure the container spans the full width */
+}
+textarea {
+    flex-grow: 1; /* Allow the textareas to grow and take all available space */
+    border: 1px solid #ccc;
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    height: 100%;  /* Make sure the text areas fill the full height of the container */
+    width: 100%;  /* Make sure the text areas fill the full height of the container */
+}
+.left-textarea {
+    margin-right: 5px;  /* Small space between text areas */
+}
+.right-textarea {
+    margin-left: 5px;  /* Small space between text areas */
+}
+</style>
+
+@code {
+    private int currentCount = 0;
+    private string inputText { get; set; } = "";
+    private string outputText { get; set; } = "";
+
+    private void IncrementCount()
+    {
+        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(inputText);
+        var schemata = openApiDocument
+            .ToApiResponsesForMatcher("/order")
+            .ToApiResponses(isOnlySuccessStatusCode: false)
+            .ToFlatSchemata(openApiDocument);
+        
+        var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic);
+        outputText = orderModelsTxt;
+        currentCount++;
+    }
+}
