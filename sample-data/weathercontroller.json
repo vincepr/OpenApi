@@ -5,12 +5,43 @@
     "version": "1.0"
   },
   "paths": {
-    "/weatherforecast": {
-      "get": {
+    "/weatherforecast/{id}": {
+      "post": {
         "tags": [
           "WebApplication3"
         ],
         "operationId": "GetWeatherForecast",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "language",
+            "in": "header",
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "default": "de-DE"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBody"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK",
@@ -77,12 +108,11 @@
       },
       "MyEnum": {
         "enum": [
-          0,
-          1,
-          2
+          "VALUE",
+          "NO_VALUE",
+          "MULT_IVALUE"
         ],
-        "type": "integer",
-        "format": "int32"
+        "type": "string"
       },
       "MyItem": {
         "type": "object",
@@ -102,6 +132,21 @@
         },
         "additionalProperties": false,
         "description": "A Single Element representing some data."
+      },
+      "RequestBody": {
+        "type": "object",
+        "properties": {
+          "dateTime": {
+            "type": "string",
+            "description": "Some DateTime filter. Is required.",
+            "format": "date-time"
+          },
+          "indicator": {
+            "$ref": "#/components/schemas/MyEnum"
+          }
+        },
+        "additionalProperties": false,
+        "description": "The request body summary."
       },
       "WeatherResponse": {
         "type": "object",
