@@ -15,6 +15,7 @@
     <nav class="nav-right">
         <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
         <div><label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/></div>
+        <div><label>InlinedEnums</label><input class="toggle" type="checkbox" @bind="Config.IsInlinedEnumsActive"/></div>
         <div><label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/></div>
         <div><label>TagWrapping</label><input class="toggle" type="checkbox" @bind="Config.IsWrappingEnabled"/></div>
         <div><label>Tabs</label><input class="toggle" type="checkbox" @bind="IsTab"/></div>

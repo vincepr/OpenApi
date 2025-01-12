@@ -171,7 +171,7 @@ public class ApiSerializer
     {
         var possibleValues = string.Join(", ",
             param.Enum.Select(e => ApiSerializerExt.SerializeExampleData(e, _openApiDiagnostic).Trim('\"')));
-        if (_config.IsCommentsActive || _config.IsExamplesActive)
+        if (_config.IsCommentsActive || _config.IsExamplesActive || _config.IsInlinedEnumsActive)
         {
             EncloseInTagsCommented(possibleValues, "<value>", "</value>", isWrappingEnabled: _config.IsWrappingEnabled);
         }
@@ -333,6 +333,12 @@ public record ApiSerializerConfig
     /// If example-data is existing add summary encased in summary-xml-tags.
     /// </summary>
     public bool IsExamplesActive { get; set; } = false;
+    
+    /// <summary>
+    /// Some models inline enums. Some also string it, even if they keep a reference even if it exists.
+    /// In these cases we can at least put all enum values in a tag, to remind us.
+    /// </summary>
+    public bool IsInlinedEnumsActive { get; set; } = true;
 
     /// <summary>
     /// class vs record(struct).
