@@ -4,12 +4,12 @@ page live at: https://vincepr.github.io/OpenApi/
 
 ## Todos
 - [x] goal is just quickly get the corresponding c# models for a api path from a OpenApi document.
-- [ ] should run in the browser, best if hosted on github pages
-- [ ] lists
-- [ ] enums
-- [ ] readonly for required fields and nullable for others
+- [x] should run in the browser, best if hosted on github pages
+- [x] lists - `list<list<list<...>>>`
+- [x] enums - normal enums (own class) - also inlined enums (value tags)
+- [x] readonly for required fields nullable for others
 - [ ] instead of flat models for a path get those with all their dependency classes and their recursive dependencies
-- [ ] AnyOf, OneOf, AllOf
+- [ ] AnyOf, OneOf, AllOf - Out of scope. Maybe if dotnet gets union types i might come back to this.
 
 ## Notes
 ### for open api 3.0
