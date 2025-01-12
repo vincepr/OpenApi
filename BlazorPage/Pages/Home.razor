@@ -3,12 +3,15 @@
 <PageTitle>Home</PageTitle>
 @using OpenApiToModels.Lib.OpenApi
 @using OpenApiToModels.Lib.Serialisation
+@using System.Text
 @inject HttpClient Http
 
 @* <p role="status">Current count: @currentCount</p> *@
 <div class="nav-box dark4">
     <nav class="nav-left">
         <button class="button" @onclick="ImportFile">Upload Api file</button>
+        <InputFile OnChange="SingleUpload">Upload Api file</InputFile>
+        <button class="button" @onclick="ImportFile">Example</button>
     </nav>
     <nav class="nav-right">
         <button class="button green " @onclick="CreateModels" id="btncompile">Generate ▶</button>
@@ -48,14 +51,20 @@
     private bool IsRecord { get; set; } = false;
     private bool IsTab { get; set; } = false;
     private bool IsReadonlyList { get; set; } = false;
-    
+
+    private async Task SingleUpload(InputFileChangeEventArgs arg)
+    {
+        MemoryStream ms = new MemoryStream();
+        await arg.File.OpenReadStream(maxAllowedSize:51200000L).CopyToAsync(ms);
+        InputText = Encoding.UTF8.GetString(ms.ToArray());
+    }
 
     private void CreateModels()
     {
         Config.Tab = IsTab ? "\t" : "    ";
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
         Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
-        
+
         var (openApiDocument, diagnostic) = OpenApi.LoadFromText(InputText);
         // var schemata = openApiDocument
         //     .ToApiResponsesForMatcher("/order")
@@ -71,111 +80,7 @@
     {
         var str = await Http.GetStringAsync("sample-data/weathercontroller.json");
         InputText = str;
-        var x = @"{
-  ""openapi"": ""3.0.1"",
-  ""info"": {
-    ""title"": ""WebApplication3"",
-    ""version"": ""1.0""
-  },
-  ""paths"": {
-    ""/weatherforecast"": {
-      ""get"": {
-        ""tags"": [
-          ""WebApplication3""
-        ],
-        ""operationId"": ""GetWeatherForecast"",
-        ""responses"": {
-          ""200"": {
-            ""description"": ""OK"",
-            ""content"": {
-              ""application/json"": {
-                ""schema"": {
-                  ""type"": ""array"",
-                  ""items"": {
-                    ""$ref"": ""#/components/schemas/WeatherForecast""
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
     }
-  },
-  ""components"": {
-    ""schemas"": {
-      ""DateOnly"": {
-        ""type"": ""object"",
-        ""properties"": {
-          ""year"": {
-            ""type"": ""integer"",
-            ""format"": ""int32""
-          },
-          ""month"": {
-            ""type"": ""integer"",
-            ""format"": ""int32""
-          },
-          ""day"": {
-            ""type"": ""integer"",
-            ""format"": ""int32""
-          },
-          ""dayOfWeek"": {
-            ""$ref"": ""#/components/schemas/DayOfWeek""
-          },
-          ""dayOfYear"": {
-            ""type"": ""integer"",
-            ""format"": ""int32"",
-            ""readOnly"": true
-          },
-          ""dayNumber"": {
-            ""type"": ""integer"",
-            ""format"": ""int32"",
-            ""readOnly"": true
-          }
-        },
-        ""additionalProperties"": false
-      },
-      ""DayOfWeek"": {
-        ""enum"": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        ""type"": ""integer"",
-        ""format"": ""int32""
-      },
-      ""WeatherForecast"": {
-        ""type"": ""object"",
-        ""properties"": {
-          ""date"": {
-            ""$ref"": ""#/components/schemas/DateOnly""
-          },
-          ""temperatureC"": {
-            ""type"": ""integer"",
-            ""format"": ""int32""
-          },
-          ""temperatureF"": {
-            ""type"": ""integer"",
-            ""format"": ""int32"",
-            ""readOnly"": true
-          },
-          ""summary"": {
-            ""type"": ""string"",
-            ""nullable"": true
-          }
-        },
-        ""additionalProperties"": false
-      }
-    }
-  }
-}";
-
-    }
-
 }
 
 <style>

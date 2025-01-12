@@ -85,26 +85,36 @@ public class ApiSerializer
 
             HandleSummary(param.Value);
             HandleExamples(param.Value);
-            HandleParam(param.Key, param.Value);
+            HandleParam(param.Key, param.Value, schema.Required);
         }
     }
 
-    private void HandleParam(string name, OpenApiSchema param)
+    private void HandleParam(string key, OpenApiSchema param, ISet<string> requiredParams)
     {
-        if (_config.IsCamelCase) name = name.ToTitleCase();
+        var name = key.ToTitleCase();
+        if (_config.IsCamelCase) name = key.ToTitleCase();
+        if (param.Enum is not null && param.Enum.Count > 0)
+        {
+            HandleInlinedEnum(key, param);
+        }
+
+        var isRequired = requiredParams.Contains(key);
 
         switch (((param.Type ?? string.Empty).ToLowerInvariant(), (param.Format ?? string.Empty).ToLowerInvariant()))
         {
-            case (null, _):
+            case (null, _) or ("", _):
                 return; // TODO: currently we serialize summary and examples! if we skipp here. Stop doing that. 
+            case ("string", _):
+                Tab().Append("public ").Required(isRequired).Append("string").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                break;
             case ("integer", "int32") or ("number", "int32"):
-                Tab().Append("public required int").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public int").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("integer", "int64") or ("number", "int63"):
-                Tab().Append("public required long").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public long").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("integer", _):
-                Tab().Append("public required int").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public int").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 if (param.Format is not null)
                 {
                     Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
@@ -113,16 +123,16 @@ public class ApiSerializer
 
                 break;
             case ("number", "int64"):
-                Tab().Append("public required long").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public long").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("number", "double"):
-                Tab().Append("public required double").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public double").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("number", "float"):
-                Tab().Append("public required float").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public float").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("number", _):
-                Tab().Append("public required double").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public double").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 if (param.Format is not null)
                 {
                     Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
@@ -130,11 +140,8 @@ public class ApiSerializer
                 }
 
                 break;
-            case ("string", _):
-                Tab().Append("public required string").Nullable(param).Append(name).AppendLine(" { get; set; }");
-                break;
             case ("boolean", _):
-                Tab().Append("public required bool").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public bool").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("array", _):
                 HandleArray(name, param);
@@ -154,10 +161,17 @@ public class ApiSerializer
         }
     }
 
+    private void HandleInlinedEnum(string name, OpenApiSchema param)
+    {
+        var possibleValues = string.Join(", ",
+            param.Enum.Select(e => ApiSerializerExt.SerializeExampleData(e, _openApiDiagnostic).Trim('\"')));
+        EncloseInTagsCommented(possibleValues, "<value>", "</value>");
+    }
+
     private void HandleArray(string name, OpenApiSchema schema)
     {
         // TODO
-        Tab().Append("public required ").Append(_config.List).Append("TodoInnerType").Append('>').Nullable(schema)
+        Tab().Append("public ").Append(_config.List).Append("TodoInnerType").Append('>').Nullable(schema)
             .Append(name)
             .AppendLine(" { get; set; }");
     }
@@ -170,7 +184,7 @@ public class ApiSerializer
             throw new NotImplementedException();
         }
 
-        Tab().Append("public required").Nullable(schema).Append(objName).Append(' ').Append(name)
+        Tab().Append("public ").Append(objName).Nullable(schema).Append(' ').Append(name)
             .AppendLine(" { get; set; }");
     }
 
@@ -255,6 +269,9 @@ internal static class ApiSerializerExt
 
     public static StringBuilder Nullable(this StringBuilder builder, OpenApiSchema schema)
         => schema.Nullable ? builder.Append("? ") : builder.Append(' ');
+    
+    public static StringBuilder Required(this StringBuilder builder, bool isRequired)
+        => isRequired ? builder.Append("required ") : builder;
 }
 
 public record ApiSerializerConfig
@@ -267,7 +284,7 @@ public record ApiSerializerConfig
     /// <summary>
     /// If description-data is existing add summary encased in summary-xml-tags.
     /// </summary>
-    public bool IsCommentsActive { get; set; } = true;
+    public bool IsCommentsActive { get; set; } = false;
 
     /// <summary>
     /// If example-data is existing add summary encased in summary-xml-tags.

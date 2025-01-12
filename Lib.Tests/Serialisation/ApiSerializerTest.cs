@@ -8,6 +8,8 @@ namespace OpenApiToModels.Lib.Tests.Serialisation;
 public class ApiSerializerTest
 {
     private const string WeatherJson = "./samplefiles/weathercontroller.json";
+    private const string InlineEnumJson = "./samplefiles/inlineenums.json";
+    private const string AnnotationsJson = "./samplefiles/withannotations.json";
     [Test]
     public void SummaryTagsAdded()
     {
@@ -58,10 +60,10 @@ public class ApiSerializerTest
     }
     
     [Test]
-    public void Serialized_WeatherReport_CorrectNullability()
+    public void Serialized_WithAnnotations_CorrectNullability()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
@@ -72,10 +74,10 @@ public class ApiSerializerTest
     }
     
     [Test]
-    public void Serialized_WeatherReport_CorrectRequired()
+    public void Serialized_WithAnnotations_CorrectRequired()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
@@ -83,5 +85,23 @@ public class ApiSerializerTest
         Console.WriteLine(str);
         str.Should().Contain("public required string RequiredString { get; set; }");
         str.Should().Contain("public required string? RequiredNullableString { get; set; }");
+    }
+    
+    //
+    // inline enum
+    //
+    
+    [Test]
+    public void Serialized_InlineEnums_ValuesSerializedToValueTag()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(InlineEnumJson));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
+        // Assert
+        str.Should().Contain("<value>");
+        str.Should().Contain("VALUE, NO_VALUE, MULT_IVALUE");
+        str.Should().Contain("</value>");
     }
 }

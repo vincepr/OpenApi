@@ -22,3 +22,39 @@ headers - An object to hold reusable headers that define the HTTP structure of y
 securitySchemes - An object to hold reusable security definitions that protect your API resources.
 links - An object to hold reusable links that get applied to API requests, moving it towards hypermedia.
 callbacks - An object to hold reusable callbacks that can be applied.
+
+
+### how to enable summary tags for swagger
+Program.cs:
+```csharp
+builder.Services.AddSwaggerGen(options =>
+{
+...
+    // add <summary> tag info.
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    
+    // more in detail nullable/required information. (otherwise string/list etc is always nullable)
+    options.SupportNonNullableReferenceTypes();
+
+    // // optional - inline enums:
+    // options.UseInlineDefinitionsForEnums();
+    
+    // need to import Swashbuckle.AspNetCore.Annotations - having in assembly is enough - this will:
+    // - add <example> tags from documentation
+    // - properly serialize DateTime and other C#-classes (eg as
+    // - (check again) propery required '*'s
+    
+    // // optional - support for tags like [SwaggerResponse(StatusCodes.Status400BadRequest)]
+    // options.EnableAnnotations();
+    
+});
+```
+
+Your WebApi project file:
+```
+<PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+</PropertyGroup>
+```

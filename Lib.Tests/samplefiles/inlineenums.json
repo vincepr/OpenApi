@@ -78,7 +78,18 @@
             "format": "int32"
           },
           "dayOfWeek": {
-            "$ref": "#/components/schemas/DayOfWeek"
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "type": "integer",
+            "format": "int32",
+            "readOnly": true
           },
           "dayOfYear": {
             "type": "integer",
@@ -92,27 +103,6 @@
           }
         },
         "additionalProperties": false
-      },
-      "DayOfWeek": {
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "type": "integer",
-        "format": "int32"
-      },
-      "MyEnum": {
-        "enum": [
-          "VALUE",
-          "NO_VALUE",
-          "MULT_IVALUE"
-        ],
-        "type": "string"
       },
       "MyItem": {
         "type": "object",
@@ -142,7 +132,14 @@
             "format": "date-time"
           },
           "indicator": {
-            "$ref": "#/components/schemas/MyEnum"
+            "enum": [
+              "VALUE",
+              "NO_VALUE",
+              "MULT_IVALUE"
+            ],
+            "type": "string",
+            "description": "The nullable enum.",
+            "nullable": true
           }
         },
         "additionalProperties": false,
@@ -189,12 +186,22 @@
             "$ref": "#/components/schemas/MyItem"
           },
           "indicator": {
-            "$ref": "#/components/schemas/MyEnum"
+            "enum": [
+              "VALUE",
+              "NO_VALUE",
+              "MULT_IVALUE"
+            ],
+            "type": "string"
           },
           "indicators": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MyEnum"
+              "enum": [
+                "VALUE",
+                "NO_VALUE",
+                "MULT_IVALUE"
+              ],
+              "type": "string"
             }
           }
         },
