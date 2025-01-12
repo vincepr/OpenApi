@@ -7,16 +7,21 @@
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+<div class="@NavMenuCssClass nav-scrollable" data-enhance-nav="false" @onclick="ToggleNavMenu">
+    <nav class="flex-column" data-enhance-nav="false">
+        <div class="nav-item px-3" data-enhance-nav="false">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All" data-enhance-nav="false">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="nav-link" href="no-monaco" data-enhance-nav="false">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> No Monaco
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="about" data-enhance-="false">
+                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> About
             </NavLink>
         </div>
     </nav>
