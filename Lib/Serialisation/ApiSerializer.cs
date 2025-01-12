@@ -1,10 +1,7 @@
 using System.Diagnostics;
 using System.Text;
-using Microsoft.OpenApi;
-using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
-using Microsoft.OpenApi.Writers;
 
 namespace OpenApiToModels.Lib.Serialisation;
 
@@ -100,14 +97,16 @@ public class ApiSerializer
         if (param.Enum is not null && param.Enum.Count > 0)
         {
             HandleInlinedEnum(key, param);
+            // TODO: try to deref - if found, we can use that real type here, instead of a string/int here.
         }
 
         bool isReq = requiredParams.Contains(key);
 
+        // TODO: clean this up - switch expression with just all repeating Tab()... drawn out.
         switch (((param.Type ?? string.Empty).ToLowerInvariant(), (param.Format ?? string.Empty).ToLowerInvariant()))
         {
             case (null, _) or ("", _):
-                return; // TODO: currently we serialize summary and examples! if we skipp here. Stop doing that. 
+                return; // TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
             case ("string", _):
                 Tab().Append("public ").Required(isReq).Append("string").Nullable(param).Append(name).Field();
                 break;
@@ -150,8 +149,6 @@ public class ApiSerializer
                     Errors.Add(
                         $"Unknown Array type {param.Type} {param.Format} for {name}. - Expected Items-schema to exist and describe array items");
                     return;
-                    throw new UnreachableException(
-                        $"Unknown Array type {param.Type} {param.Format} for {name}. - Expected Items-schema to exist and describe array items");
                 }
 
                 HandleArray(name, param, isArrayRequired: isReq);
@@ -223,11 +220,8 @@ public class ApiSerializer
         string toEnclose, string startTag = "<example>", string endTag = "</example>", bool isWrappingEnabled = false)
     {
         if (toEnclose == string.Empty) return;
-        // Todo this calc would be hard to get right. How much do tabs count. Formatter will clean up anyway.
-        // TODO: replace /t for '    ' then do calculation.
-        if (toEnclose.Length + startTag.Length + endTag.Length + 2 < 110
-            && toEnclose.Contains("\n") == false 
-            && isWrappingEnabled)
+        var preview = ApiSerializerExt.TabRaw(_depth, _config.Tab).Replace("\t", "    ") + "///   " + startTag + endTag;
+        if (preview.Length < _config.MaxChars && toEnclose.Contains("\n") == false && isWrappingEnabled)
         {
             Tab().Append("/// ").Append(startTag).Append(' ').Append(toEnclose).Append(' ').AppendLine(endTag);
             return;
@@ -285,38 +279,9 @@ public class ApiSerializer
     }
 }
 
-internal static class ApiSerializerExt
-{
-    public static string TabRaw(ushort depth, string tab = "\t") => new('\t', depth);
-
-    public static string SerializeExampleData(IOpenApiAny? example, OpenApiDiagnostic? openApiVersion)
-    {
-        using var exampleWriter = new StringWriter();
-        var writer = new OpenApiJsonWriter(exampleWriter);
-        example?.Write(writer, openApiVersion?.SpecificationVersion ?? OpenApiSpecVersion.OpenApi3_0);
-        return exampleWriter.ToString();
-    }
-
-    public static string ToTitleCase(this string str)
-    {
-        if (str.Length > 1)
-        {
-            return char.ToUpper(str[0]) + str.Substring(1);
-        }
-
-        return str.ToUpper();
-    }
-
-    public static StringBuilder Nullable(this StringBuilder builder, OpenApiSchema schema)
-        => schema.Nullable ? builder.Append("? ") : builder.Append(' ');
-
-    public static StringBuilder Required(this StringBuilder builder, bool isRequired)
-        => isRequired ? builder.Append("required ") : builder;
-
-    public static StringBuilder Field(this StringBuilder builder, bool addNewline = true)
-        => addNewline ? builder.AppendLine(" { get; set; }") : builder.Append(" { get; set; }");
-}
-
+/// <summary>
+/// Object holding all configuration possibilities for <see cref="ApiSerializer"/>.
+/// </summary>
 public record ApiSerializerConfig
 {
     /// <summary>
@@ -364,4 +329,9 @@ public record ApiSerializerConfig
     /// Wrap tags to one line, if below the max-character limit.
     /// </summary>
     public bool IsWrappingEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Max char length used for tag wrapping. Any overflow above this value will force open and closing on newlines.
+    /// </summary>
+    public uint MaxChars { get; set; } = 120;
 }
