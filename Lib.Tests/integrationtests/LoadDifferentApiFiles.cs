@@ -81,8 +81,8 @@ public class LoadDifferentApiFiles
     private IEnumerable<(OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic, string id)>
         SetupDocumentsFromFiles()
     {
-        Console.WriteLine($"Found {Directory.GetFiles("./integrationtests/samplefiles").Length} OpenApiFiles to test");
-        foreach (var file in Directory.GetFiles("./integrationtests/samplefiles"))
+        Console.WriteLine($"Found {Directory.GetFiles("./samplefiles").Length} OpenApiFiles to test");
+        foreach (var file in Directory.GetFiles("./samplefiles"))
         {
             var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(file));
             yield return (openApiDocument, diagnostic, file);

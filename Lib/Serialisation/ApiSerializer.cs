@@ -37,9 +37,41 @@ public class ApiSerializer
         else Tab().AppendLine();
 
         HandleSummary(schema);
-        HandleOpenClass(schema);
-        HandleWriteAllParams(schema);
+        if (schema.Enum is null || schema.Enum.Count == 0)
+        {
+            HandleOpenClass(schema);
+            HandleWriteAllParams(schema);
+        }
+        else
+        {
+            HandleEnum(schema);
+        }
+
         HandleCloseClass(schema);
+    }
+
+    private void HandleEnum(OpenApiSchema schema)
+    {
+        if (schema.Type == "string")
+        {
+            Tab().AppendLine("[JsonConverter(typeof(JsonStringEnumConverter))]");
+        }
+
+        Tab().Append("public enum ").AppendLine(schema.Reference.Id);
+        Tab().AppendLine("{");
+        _depth++;
+
+        foreach (var enumValue in schema.Enum)
+        {
+            var serialized = ApiSerializerExt.SerializeExampleData(enumValue, _openApiDiagnostic).Trim('\"');
+            if (schema.Type == "string")
+            {
+                Tab().Append(ApiSerializerExt.SerializeExampleData(enumValue, _openApiDiagnostic).Trim('\"'))
+                    .AppendLine(",");
+            }
+
+            Tab().Append("VALUE_").Append(serialized).Append(" = ").Append(serialized).AppendLine(",");
+        }
     }
 
     private void HandleWriteAllParams(OpenApiSchema schema)
@@ -65,13 +97,13 @@ public class ApiSerializer
             case (null, _):
                 return; // TODO: currently we serialize summary and examples! if we skipp here. Stop doing that. 
             case ("integer", "int32") or ("number", "int32"):
-                Tab().Append("public required int ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required int").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("integer", "int64") or ("number", "int63"):
-                Tab().Append("public required long ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required long").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("integer", _):
-                Tab().Append("public required int ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required int").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 if (param.Format is not null)
                 {
                     Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
@@ -80,16 +112,16 @@ public class ApiSerializer
 
                 break;
             case ("number", "int64"):
-                Tab().Append("public required long ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required long").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("number", "double"):
-                Tab().Append("public required double ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required double").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("number", "float"):
-                Tab().Append("public required float ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required float").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("number", _):
-                Tab().Append("public required double ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required double").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 if (param.Format is not null)
                 {
                     Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
@@ -98,17 +130,16 @@ public class ApiSerializer
 
                 break;
             case ("string", _):
-                Tab().Append("public required string ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required string").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("boolean", _):
-                Tab().Append("public required bool ").Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public required bool").Nullable(param).Append(name).AppendLine(" { get; set; }");
                 break;
             case ("array", _):
-                Tab().Append("public required ").Append(_config.List).Append("TodoInnerType").Append('>').Append(name)
-                    .AppendLine(" { get; set; }");
+                HandleArray(name, param);
                 break;
             case ("object", _):
-                Tab().Append("public required object ").Append(name).AppendLine(" { get; set; }");
+                HandleObject(name, param);
                 break;
             default:
                 return;
@@ -120,6 +151,26 @@ public class ApiSerializer
                 throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
                 break;
         }
+    }
+
+    private void HandleArray(string name, OpenApiSchema schema)
+    {
+        // TODO
+        Tab().Append("public required ").Append(_config.List).Append("TodoInnerType").Append('>').Nullable(schema)
+            .Append(name)
+            .AppendLine(" { get; set; }");
+    }
+
+    private void HandleObject(string name, OpenApiSchema schema)
+    {
+        var objName = schema.Reference?.Id;
+        if (objName is null)
+        {
+            throw new NotImplementedException();
+        }
+
+        Tab().Append("public required").Nullable(schema).Append(objName).Append(' ').Append(name)
+            .AppendLine(" { get; set; }");
     }
 
     private void HandleOpenClass(OpenApiSchema schema)
@@ -144,8 +195,7 @@ public class ApiSerializer
     private void HandleExamples(OpenApiSchema schema)
     {
         if (_config.IsCommentsActive == false || schema.Description is null) return;
-        var exampleData = ApiSerializerExt.SerializeExampleData(
-            schema.Example, _openApiDiagnostic?.SpecificationVersion ?? OpenApiSpecVersion.OpenApi3_0);
+        var exampleData = ApiSerializerExt.SerializeExampleData(schema.Example, _openApiDiagnostic);
         EncloseInTagsCommented(exampleData);
     }
 
@@ -184,11 +234,11 @@ internal static class ApiSerializerExt
 {
     public static string TabRaw(ushort depth, string tab = "\t") => new('\t', depth);
 
-    public static string SerializeExampleData(IOpenApiAny? example, OpenApiSpecVersion openApiVersion)
+    public static string SerializeExampleData(IOpenApiAny? example, OpenApiDiagnostic? openApiVersion)
     {
         using var exampleWriter = new StringWriter();
         var writer = new OpenApiJsonWriter(exampleWriter);
-        example?.Write(writer, openApiVersion);
+        example?.Write(writer, openApiVersion?.SpecificationVersion ?? OpenApiSpecVersion.OpenApi3_0);
         return exampleWriter.ToString();
     }
 
@@ -201,6 +251,9 @@ internal static class ApiSerializerExt
 
         return str.ToUpper();
     }
+
+    public static StringBuilder Nullable(this StringBuilder builder, OpenApiSchema schema)
+        => schema.Nullable ? builder.Append("? ") : builder.Append(' ');
 }
 
 public record ApiSerializerConfig

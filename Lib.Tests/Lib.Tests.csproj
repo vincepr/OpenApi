@@ -28,18 +28,15 @@
 <!--        <None Include="$(SolutionDir)\Lib.Tests\IntegrationTests\samplefiles\**"-->
 <!--              CopyToOutputDirectory="PreserveNewest"-->
 <!--              LinkBase="config\" />-->
-        <None Update="IntegrationTests\samplefiles\*.json">
+        <None Update="samplefiles\*.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="IntegrationTests\samplefiles\*.yaml">
+        <None Update="samplefiles\*.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="IntegrationTests\samplefiles\*.yml">
+        <None Update="samplefiles\*.yml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="integrationtests\samplefiles\" />
     </ItemGroup>
 
 </Project>
