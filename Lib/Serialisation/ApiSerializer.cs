@@ -208,7 +208,7 @@ public class ApiSerializer
 
     private void HandleExamples(OpenApiSchema schema)
     {
-        if (_config.IsCommentsActive == false || schema.Description is null) return;
+        if (_config.IsExamplesActive == false || schema.Description is null) return;
         var exampleData = ApiSerializerExt.SerializeExampleData(schema.Example, _openApiDiagnostic);
         EncloseInTagsCommented(exampleData);
     }
