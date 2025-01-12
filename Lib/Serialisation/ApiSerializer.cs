@@ -236,13 +236,17 @@ public class ApiSerializer
     
     private void HandleArray(string name, OpenApiSchema arraySchema, bool isArrayRequired)
     {
+        var itemId = GetListedTypeRecursive(arraySchema);
+
+        // TODO - match types (string, int usw) here again?
+        Tab().Append("public ").Required(isArrayRequired).Append(_config.List).Append(itemId)
+            .Nullable(arraySchema).Append(name).Field();
+    }
+
+    private string GetListedTypeRecursive(OpenApiSchema arraySchema)
+    {
         var itemSchema = arraySchema.Items;
         var itemId = "object";
-        if (itemSchema.Type == "object" && itemSchema.Reference?.Id == "")
-        {
-            itemId = itemSchema.Reference.Id;
-        }
-
         itemId = itemSchema switch
         {
             { Type: "object", } => itemSchema.Reference?.Id ?? "object",
@@ -256,12 +260,10 @@ public class ApiSerializer
             { Type: "number", Format: "float"} => "float",
             { Type: "number", } => "double",
             { Type: "boolean", } => "bool",
-            { Type: "array", } => "array", // Todo must handle recursive
+            { Type: "array", } => $"{_config.List}{GetListedTypeRecursive(itemSchema)}",
+            _ => throw new UnreachableException($"Unimplemented array type {itemSchema.Type} {itemSchema.Format}"),
         };
-
-        // TODO - match types (string, int usw) here again?
-        Tab().Append("public ").Required(isArrayRequired).Append(_config.List).Append(itemId).Append('>')
-            .Nullable(arraySchema).Append(name).Field();
+        return itemId + (itemSchema.Nullable ? "?>" : ">");
     }
 
     public static string Serialize(

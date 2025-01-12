@@ -108,6 +108,22 @@
         "additionalProperties": false,
         "description": "The request body summary."
       },
+      "StringPaginationGeneric": {
+        "type": "object",
+        "properties": {
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "WeatherResponse": {
         "required": [
           "indicators",
@@ -142,17 +158,23 @@
             "type": "string",
             "nullable": true
           },
-          "ids": {
+          "listOfLists": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "nullable": true
           },
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MyItem"
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/MyItem"
+              }
             }
           },
           "indicators": {
@@ -160,6 +182,9 @@
             "items": {
               "$ref": "#/components/schemas/MyEnum"
             }
+          },
+          "paginationGenericListOfStrings": {
+            "$ref": "#/components/schemas/StringPaginationGeneric"
           },
           "myItem": {
             "$ref": "#/components/schemas/MyItem"

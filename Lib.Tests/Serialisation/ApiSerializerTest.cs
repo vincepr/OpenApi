@@ -97,23 +97,23 @@ public class ApiSerializerTest
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
         Console.WriteLine(str);
-        str.Should().Contain("public List<string>? Ids { get; set; }");
-        str.Should().Contain("public List<MyItem?> Items { get; set; }");
-        str.Should().Contain("public required List<MyEnum> Indicators { get; set; }");
+        str.Should().Contain("<value>");
+        str.Should().Contain("VALUE, NO_VALUE, MULT_IVALUE");
+        str.Should().Contain("</value>");
     }
     
     [Test]
-    public void Serialized_List_CorrectlyAdded()
+    public void Serialized_List_And_Items_Correct()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(InlineEnumJson));
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
         Console.WriteLine(str);
-        str.Should().Contain("<value>");
-        str.Should().Contain("VALUE, NO_VALUE, MULT_IVALUE");
-        str.Should().Contain("</value>");
+        str.Should().Contain("public List<List<string>>? ListOfLists { get; set; }");
+        str.Should().Contain("public List<List<MyItem>> Items { get; set; }");
+        str.Should().Contain("public required List<string> Indicators { get; set; }");
     }
 }
