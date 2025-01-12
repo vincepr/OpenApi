@@ -14,27 +14,14 @@
     </nav>
     <nav class="nav-right">
         <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
-        <div>
-            <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
-        </div>
-        <div>
-            <label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
-        </div>
-        <div>
-            <label>Tabs</label><input class="toggle" type="checkbox" @bind="IsTab"/>
-        </div>
-        <div>
-            <label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
-        </div>
-        <div>
-            <label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
-        </div>
-        <div>
-            <label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/>
-        </div>
-        <div>
-            <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
-        </div>
+        <div><label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/></div>
+        <div><label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/></div>
+        <div><label>TagWrapping</label><input class="toggle" type="checkbox" @bind="Config.IsWrappingEnabled"/></div>
+        <div><label>Tabs</label><input class="toggle" type="checkbox" @bind="IsTab"/></div>
+        <div><label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/></div>
+        <div><label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/></div>
+        <div><label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/></div>
+        <div><label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/></div>
     </nav>
 </div>
 

@@ -171,7 +171,10 @@ public class ApiSerializer
     {
         var possibleValues = string.Join(", ",
             param.Enum.Select(e => ApiSerializerExt.SerializeExampleData(e, _openApiDiagnostic).Trim('\"')));
-        EncloseInTagsCommented(possibleValues, "<value>", "</value>");
+        if (_config.IsCommentsActive || _config.IsExamplesActive)
+        {
+            EncloseInTagsCommented(possibleValues, "<value>", "</value>", isWrappingEnabled: _config.IsWrappingEnabled);
+        }
     }
 
     private void HandleObject(string name, OpenApiSchema schema, bool isRequired)
@@ -203,25 +206,28 @@ public class ApiSerializer
     private void HandleSummary(OpenApiSchema schema)
     {
         if (_config.IsCommentsActive == false || schema.Description is null) return;
-        EncloseInTagsCommented(schema.Description, "<summary>", "</summary>");
+        EncloseInTagsCommented(
+            schema.Description, "<summary>", "</summary>", isWrappingEnabled: _config.IsWrappingEnabled);
     }
 
     private void HandleExamples(OpenApiSchema schema)
     {
         if (_config.IsExamplesActive == false || schema.Description is null) return;
         var exampleData = ApiSerializerExt.SerializeExampleData(schema.Example, _openApiDiagnostic);
-        EncloseInTagsCommented(exampleData);
+        EncloseInTagsCommented(exampleData, isWrappingEnabled: _config.IsWrappingEnabled);
     }
 
     private StringBuilder Tab() => _str.Append(ApiSerializerExt.TabRaw(_depth, _config.Tab));
 
-    private void EncloseInTagsCommented(string toEnclose, string startTag = "<example>", string endTag = "</example>")
+    private void EncloseInTagsCommented(
+        string toEnclose, string startTag = "<example>", string endTag = "</example>", bool isWrappingEnabled = false)
     {
         if (toEnclose == string.Empty) return;
         // Todo this calc would be hard to get right. How much do tabs count. Formatter will clean up anyway.
         // TODO: replace /t for '    ' then do calculation.
         if (toEnclose.Length + startTag.Length + endTag.Length + 2 < 110
-            && toEnclose.Contains("\n") == false && _config.IsEnforceSummaryNewlines == false)
+            && toEnclose.Contains("\n") == false 
+            && isWrappingEnabled)
         {
             Tab().Append("/// ").Append(startTag).Append(' ').Append(toEnclose).Append(' ').AppendLine(endTag);
             return;
@@ -344,12 +350,12 @@ public record ApiSerializerConfig
     public bool IsCamelCase { get; set; } = true;
 
     /// <summary>
-    /// Newlines between classes and fields.
+    /// Disable newlines between classes and fields.
     /// </summary>
     public bool IsNoNewlines { get; set; } = false;
 
     /// <summary>
-    /// Enforce newline for every summary tag. Even when below the max character limit.
+    /// Wrap tags to one line, if below the max-character limit.
     /// </summary>
-    public bool IsEnforceSummaryNewlines { get; set; } = true;
+    public bool IsWrappingEnabled { get; set; } = false;
 }

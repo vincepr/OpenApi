@@ -111,9 +111,23 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
-        Console.WriteLine(str);
         str.Should().Contain("public List<List<string>>? ListOfLists { get; set; }");
         str.Should().Contain("public List<List<MyItem>> Items { get; set; }");
         str.Should().Contain("public required List<string> Indicators { get; set; }");
+    }
+    
+    [Test]
+    public void Serialized_Examples_DoWrap_IfUnder120Chars()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig() { IsWrappingEnabled = true, IsExamplesActive = true, IsCommentsActive = true};
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
+        // Assert
+        Console.WriteLine(str);
+        str.Should().Contain("/// <summary> Date of the entry. </summary>");
+        str.Should().Contain("/// <example> \"2025-01-12\" </example>");
     }
 }
