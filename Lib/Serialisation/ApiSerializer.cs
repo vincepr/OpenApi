@@ -68,6 +68,7 @@ public class ApiSerializer
             {
                 Tab().Append(ApiSerializerExt.SerializeExampleData(enumValue, _openApiDiagnostic).Trim('\"'))
                     .AppendLine(",");
+                continue;
             }
 
             Tab().Append("VALUE_").Append(serialized).Append(" = ").Append(serialized).AppendLine(",");
@@ -82,8 +83,8 @@ public class ApiSerializer
             if (isFirstParam || _config.IsNoNewlines) isFirstParam = false;
             else Tab().AppendLine();
 
-            HandleSummary(schema);
-            HandleExamples(schema);
+            HandleSummary(param.Value);
+            HandleExamples(param.Value);
             HandleParam(param.Key, param.Value);
         }
     }
