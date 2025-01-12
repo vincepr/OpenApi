@@ -9,39 +9,38 @@
 @* <p role="status">Current count: @currentCount</p> *@
 <div class="nav-box dark4">
     <nav class="nav-left">
-        <button class="button" @onclick="ImportFile">Upload Api file</button>
-        <InputFile OnChange="SingleUpload">Upload Api file</InputFile>
-        <button class="button" @onclick="ImportFile">Example</button>
+        <button class="button" @onclick="ImportFile">Example Data</button>
+        <InputFile OnChange="SingleUpload"/>
     </nav>
     <nav class="nav-right">
-        <button class="button green " @onclick="CreateModels" id="btncompile">Generate ▶</button>
+        <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
         <div>
-            <label>Use Tab</label><input class="toggle" type="checkbox" @bind="IsTab"/>
+            <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
         </div>
         <div>
-            <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
+            <label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
+        </div>
+        <div>
+            <label>Tabs</label><input class="toggle" type="checkbox" @bind="IsTab"/>
+        </div>
+        <div>
+            <label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
+        </div>
+        <div>
+            <label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
         </div>
         <div>
             <label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/>
         </div>
         <div>
-            <label>Use Record</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
-        </div>
-        <div>
-            <label>Readonly List</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
-        </div>
-        <div>
-            <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
-        </div>
-        <div>
-            <label>Summary Lines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
+            <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
         </div>
     </nav>
 </div>
 
 <div class="container">
-    <textarea class="left-textarea" @bind="InputText"></textarea>
-    <textarea class="right-textarea" @bind="OutputText"></textarea>
+    <textarea class="left-textarea" wrap="off" @bind="InputText"></textarea>
+    <textarea class="right-textarea" wrap="off" @bind="OutputText"></textarea>
 </div>
 
 @code {
@@ -59,19 +58,14 @@
         InputText = Encoding.UTF8.GetString(ms.ToArray());
     }
 
-    private void CreateModels()
+    private void Generate()
     {
         Config.Tab = IsTab ? "\t" : "    ";
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
         Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
 
         var (openApiDocument, diagnostic) = OpenApi.LoadFromText(InputText);
-        // var schemata = openApiDocument
-        //     .ToApiResponsesForMatcher("/order")
-        //     .ToApiResponses(isOnlySuccessStatusCode: false)
-        //     .ToFlatSchemata(openApiDocument);
         var schemata = openApiDocument.Components.Schemas.Select(s => s.Value);
-
         var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
         OutputText = orderModelsTxt;
     }

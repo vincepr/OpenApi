@@ -10,6 +10,10 @@ namespace OpenApiToModels.Lib.Serialisation;
 
 public class ApiSerializer
 {
+    /// <summary>
+    /// Errors where some step resulted in incorrect serialization or serialization was skipped.
+    /// </summary>
+    public List<string> Errors { get; private set; } = [];
     private readonly StringBuilder _str;
     private readonly ApiSerializerConfig _config;
     private readonly OpenApiDiagnostic? _openApiDiagnostic;
@@ -30,7 +34,7 @@ public class ApiSerializer
     {
         if (schema.Reference is null)
         {
-            Console.Error.WriteLine("Reference was null. Unable to serialize without a class name");
+            Errors.Add("Reference was null. Unable to serialize without a class name");
             return;
         }
 
@@ -92,8 +96,7 @@ public class ApiSerializer
 
     private void HandleParam(string key, OpenApiSchema param, ISet<string> requiredParams)
     {
-        var name = key.ToTitleCase();
-        if (_config.IsCamelCase) name = key.ToTitleCase();
+        var name = _config.IsCamelCase ? key.ToTitleCase() : key;
         if (param.Enum is not null && param.Enum.Count > 0)
         {
             HandleInlinedEnum(key, param);
@@ -118,7 +121,7 @@ public class ApiSerializer
                 Tab().Append("public ").Required(isReq).Append("int").Nullable(param).Append(name).Field();
                 if (param.Format is not null)
                 {
-                    Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
+                    Errors.Add($"Unknown Param type {param.Type} {param.Format} for {name}");
                     throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
                 }
 
@@ -133,7 +136,7 @@ public class ApiSerializer
                 Tab().Append("public ").Required(isReq).Append("double").Nullable(param).Append(name).Field();
                 if (param.Format is not null)
                 {
-                    Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
+                    Errors.Add($"Unknown Param type {param.Type} {param.Format} for {name}");
                     throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
                 }
 
@@ -144,8 +147,9 @@ public class ApiSerializer
             case ("array", _):
                 if (param.Items is null)
                 {
-                    Console.Error.WriteLine(
+                    Errors.Add(
                         $"Unknown Array type {param.Type} {param.Format} for {name}. - Expected Items-schema to exist and describe array items");
+                    return;
                     throw new UnreachableException(
                         $"Unknown Array type {param.Type} {param.Format} for {name}. - Expected Items-schema to exist and describe array items");
                 }
@@ -156,13 +160,9 @@ public class ApiSerializer
                 HandleObject(name, param, isRequired: isReq);
                 break;
             default:
-                return;
                 // TODO: handle AllOf | OneOf |AnyOf (eg for enums)
-                var x = param.AllOf;
-                var y = param.OneOf;
-                var z = param.AnyOf;
-                Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
-                throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
+                Errors.Add($"Unknown Param type {param.Type} {param.Format} for {name}");
+                throw new NotImplementedException($"Unknown Param type {param.Type} {param.Format} for {name}"); // TODO: remove after testing
                 break;
         }
     }
@@ -179,7 +179,8 @@ public class ApiSerializer
         var objName = schema.Reference?.Id;
         if (objName is null)
         {
-            throw new NotImplementedException();
+            Errors.Add($"Inline object encountered for {name}. Using 'object' as fallback.");
+            objName = "object";
         }
 
         Tab().Append("public ").Append(objName).Required(isRequired).Nullable(schema).Append(' ').Append(name)
@@ -218,6 +219,7 @@ public class ApiSerializer
     {
         if (toEnclose == string.Empty) return;
         // Todo this calc would be hard to get right. How much do tabs count. Formatter will clean up anyway.
+        // TODO: replace /t for '    ' then do calculation.
         if (toEnclose.Length + startTag.Length + endTag.Length + 2 < 110
             && toEnclose.Contains("\n") == false && _config.IsEnforceSummaryNewlines == false)
         {
@@ -233,7 +235,7 @@ public class ApiSerializer
 
         Tab().Append("/// ").AppendLine(endTag);
     }
-    
+
     private void HandleArray(string name, OpenApiSchema arraySchema, bool isArrayRequired)
     {
         var itemId = GetListedTypeRecursive(arraySchema);
@@ -251,16 +253,17 @@ public class ApiSerializer
         {
             { Type: "object", } => itemSchema.Reference?.Id ?? "object",
             { Type: "string", } => "string",
-            { Type: "integer", Format: "int32"} => "int",
-            { Type: "integer", Format: "int64"} => "long",
-            { Type: "integer",}  => "int",
-            { Type: "number", Format: "int32"} => "int",
-            { Type: "number", Format: "int64"} => "long",
+            { Type: "integer", Format: "int32" } => "int",
+            { Type: "integer", Format: "int64" } => "long",
+            { Type: "integer", } => "int",
+            { Type: "number", Format: "int32" } => "int",
+            { Type: "number", Format: "int64" } => "long",
             { Type: "number", Format: "double" } => "double",
-            { Type: "number", Format: "float"} => "float",
+            { Type: "number", Format: "float" } => "float",
             { Type: "number", } => "double",
             { Type: "boolean", } => "bool",
             { Type: "array", } => $"{_config.List}{GetListedTypeRecursive(itemSchema)}",
+            { Type: null, Format: null } => $"object", // inline object. This fallback seems sane enough.
             _ => throw new UnreachableException($"Unimplemented array type {itemSchema.Type} {itemSchema.Format}"),
         };
         return itemId + (itemSchema.Nullable ? "?>" : ">");
@@ -271,6 +274,7 @@ public class ApiSerializer
     {
         var serializer = new ApiSerializer(config, diagnostic);
         foreach (var schema in schemata) serializer.Add(schema);
+        foreach (var error in serializer.Errors) Console.Error.WriteLine(error);
         return serializer.Build();
     }
 }
