@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Net.WebSockets;
+using FluentAssertions;
 using OpenApiToModels.Lib.Serialisation;
 
 namespace OpenApiToModels.Lib.Tests.Serialisation;
@@ -11,7 +12,7 @@ public class ApiSerializerTest
     private const string InlineEnumJson = "./samplefiles/inlineenums.json";
     private const string AnnotationsJson = "./samplefiles/withannotations.json";
     [Test]
-    public void SummaryTagsAdded()
+    public void Serialized_SummaryTags()
     {
         // Arrange
         var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
@@ -22,11 +23,12 @@ public class ApiSerializerTest
         // Assert
         str.Should().Contain("/// <summary>");
         str.Should().Contain("/// The request body summary.");
+        str.Should().Contain("/// Some DateTime filter. Is required.");
         str.Should().Contain("/// </summary>");
     }
     
     [Test]
-    public void Serialized_IntEnum()
+    public void Serialized_IntEnumInOwnClass()
     {
         // Arrange
         var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
@@ -44,7 +46,7 @@ public class ApiSerializerTest
     }
     
     [Test]
-    public void Serialized_StringEnum()
+    public void Serialized_StringEnumInOwnClass()
     {
         // Arrange
         var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
@@ -68,7 +70,6 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
-        Console.WriteLine(str);
         str.Should().Contain("public string? NullableString { get; set; }");
         str.Should().Contain("public string NotNullableString { get; set; }");
     }
@@ -82,14 +83,9 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
-        Console.WriteLine(str);
         str.Should().Contain("public required string RequiredString { get; set; }");
         str.Should().Contain("public required string? RequiredNullableString { get; set; }");
     }
-    
-    //
-    // inline enum
-    //
     
     [Test]
     public void Serialized_InlineEnums_ValuesSerializedToValueTag()
@@ -100,6 +96,22 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
+        Console.WriteLine(str);
+        str.Should().Contain("public List<string>? Ids { get; set; }");
+        str.Should().Contain("public List<MyItem?> Items { get; set; }");
+        str.Should().Contain("public required List<MyEnum> Indicators { get; set; }");
+    }
+    
+    [Test]
+    public void Serialized_List_CorrectlyAdded()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(InlineEnumJson));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
+        // Assert
+        Console.WriteLine(str);
         str.Should().Contain("<value>");
         str.Should().Contain("VALUE, NO_VALUE, MULT_IVALUE");
         str.Should().Contain("</value>");

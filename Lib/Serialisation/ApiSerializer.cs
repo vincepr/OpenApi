@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Any;
@@ -98,23 +99,23 @@ public class ApiSerializer
             HandleInlinedEnum(key, param);
         }
 
-        var isRequired = requiredParams.Contains(key);
+        bool isReq = requiredParams.Contains(key);
 
         switch (((param.Type ?? string.Empty).ToLowerInvariant(), (param.Format ?? string.Empty).ToLowerInvariant()))
         {
             case (null, _) or ("", _):
                 return; // TODO: currently we serialize summary and examples! if we skipp here. Stop doing that. 
             case ("string", _):
-                Tab().Append("public ").Required(isRequired).Append("string").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public ").Required(isReq).Append("string").Nullable(param).Append(name).Field();
                 break;
             case ("integer", "int32") or ("number", "int32"):
-                Tab().Append("public int").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public ").Required(isReq).Append("int").Nullable(param).Append(name).Field();
                 break;
-            case ("integer", "int64") or ("number", "int63"):
-                Tab().Append("public long").Nullable(param).Append(name).AppendLine(" { get; set; }");
+            case ("integer", "int64") or ("number", "int64"):
+                Tab().Append("public ").Required(isReq).Append("long").Nullable(param).Append(name).Field();
                 break;
             case ("integer", _):
-                Tab().Append("public int").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public ").Required(isReq).Append("int").Nullable(param).Append(name).Field();
                 if (param.Format is not null)
                 {
                     Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
@@ -122,17 +123,14 @@ public class ApiSerializer
                 }
 
                 break;
-            case ("number", "int64"):
-                Tab().Append("public long").Nullable(param).Append(name).AppendLine(" { get; set; }");
-                break;
             case ("number", "double"):
-                Tab().Append("public double").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public ").Required(isReq).Append("double").Nullable(param).Append(name).Field();
                 break;
             case ("number", "float"):
-                Tab().Append("public float").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public ").Required(isReq).Append("float").Nullable(param).Append(name).Field();
                 break;
             case ("number", _):
-                Tab().Append("public double").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public ").Required(isReq).Append("double").Nullable(param).Append(name).Field();
                 if (param.Format is not null)
                 {
                     Console.Error.WriteLine($"Unknown Param type {param.Type} {param.Format} for {name}");
@@ -141,13 +139,21 @@ public class ApiSerializer
 
                 break;
             case ("boolean", _):
-                Tab().Append("public bool").Nullable(param).Append(name).AppendLine(" { get; set; }");
+                Tab().Append("public ").Required(isReq).Append("bool").Nullable(param).Append(name).Field();
                 break;
             case ("array", _):
-                HandleArray(name, param);
+                if (param.Items is null)
+                {
+                    Console.Error.WriteLine(
+                        $"Unknown Array type {param.Type} {param.Format} for {name}. - Expected Items-schema to exist and describe array items");
+                    throw new UnreachableException(
+                        $"Unknown Array type {param.Type} {param.Format} for {name}. - Expected Items-schema to exist and describe array items");
+                }
+
+                HandleArray(name, param, isArrayRequired: isReq);
                 break;
             case ("object", _):
-                HandleObject(name, param);
+                HandleObject(name, param, isRequired: isReq);
                 break;
             default:
                 return;
@@ -168,15 +174,7 @@ public class ApiSerializer
         EncloseInTagsCommented(possibleValues, "<value>", "</value>");
     }
 
-    private void HandleArray(string name, OpenApiSchema schema)
-    {
-        // TODO
-        Tab().Append("public ").Append(_config.List).Append("TodoInnerType").Append('>').Nullable(schema)
-            .Append(name)
-            .AppendLine(" { get; set; }");
-    }
-
-    private void HandleObject(string name, OpenApiSchema schema)
+    private void HandleObject(string name, OpenApiSchema schema, bool isRequired)
     {
         var objName = schema.Reference?.Id;
         if (objName is null)
@@ -184,8 +182,8 @@ public class ApiSerializer
             throw new NotImplementedException();
         }
 
-        Tab().Append("public ").Append(objName).Nullable(schema).Append(' ').Append(name)
-            .AppendLine(" { get; set; }");
+        Tab().Append("public ").Append(objName).Required(isRequired).Nullable(schema).Append(' ').Append(name)
+            .Field();
     }
 
     private void HandleOpenClass(OpenApiSchema schema)
@@ -235,6 +233,36 @@ public class ApiSerializer
 
         Tab().Append("/// ").AppendLine(endTag);
     }
+    
+    private void HandleArray(string name, OpenApiSchema arraySchema, bool isArrayRequired)
+    {
+        var itemSchema = arraySchema.Items;
+        var itemId = "object";
+        if (itemSchema.Type == "object" && itemSchema.Reference?.Id == "")
+        {
+            itemId = itemSchema.Reference.Id;
+        }
+
+        itemId = itemSchema switch
+        {
+            { Type: "object", } => itemSchema.Reference?.Id ?? "object",
+            { Type: "string", } => "string",
+            { Type: "integer", Format: "int32"} => "int",
+            { Type: "integer", Format: "int64"} => "long",
+            { Type: "integer",}  => "int",
+            { Type: "number", Format: "int32"} => "int",
+            { Type: "number", Format: "int64"} => "long",
+            { Type: "number", Format: "double" } => "double",
+            { Type: "number", Format: "float"} => "float",
+            { Type: "number", } => "double",
+            { Type: "boolean", } => "bool",
+            { Type: "array", } => "array", // Todo must handle recursive
+        };
+
+        // TODO - match types (string, int usw) here again?
+        Tab().Append("public ").Required(isArrayRequired).Append(_config.List).Append(itemId).Append('>')
+            .Nullable(arraySchema).Append(name).Field();
+    }
 
     public static string Serialize(
         IEnumerable<OpenApiSchema> schemata, OpenApiDiagnostic? diagnostic, ApiSerializerConfig? config = default)
@@ -269,9 +297,12 @@ internal static class ApiSerializerExt
 
     public static StringBuilder Nullable(this StringBuilder builder, OpenApiSchema schema)
         => schema.Nullable ? builder.Append("? ") : builder.Append(' ');
-    
+
     public static StringBuilder Required(this StringBuilder builder, bool isRequired)
         => isRequired ? builder.Append("required ") : builder;
+
+    public static StringBuilder Field(this StringBuilder builder, bool addNewline = true)
+        => addNewline ? builder.AppendLine(" { get; set; }") : builder.Append(" { get; set; }");
 }
 
 public record ApiSerializerConfig
