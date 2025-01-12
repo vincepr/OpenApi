@@ -16,7 +16,6 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "style": "simple",
             "schema": {
               "type": "integer",
               "format": "int32"
@@ -25,7 +24,6 @@
           {
             "name": "language",
             "in": "header",
-            "style": "simple",
             "schema": {
               "type": "string",
               "default": "de-DE"
@@ -62,50 +60,6 @@
   },
   "components": {
     "schemas": {
-      "DateOnly": {
-        "type": "object",
-        "properties": {
-          "year": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "month": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "day": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "dayOfWeek": {
-            "$ref": "#/components/schemas/DayOfWeek"
-          },
-          "dayOfYear": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "dayNumber": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "DayOfWeek": {
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "type": "integer",
-        "format": "int32"
-      },
       "MyEnum": {
         "enum": [
           "VALUE",
@@ -115,6 +69,9 @@
         "type": "string"
       },
       "MyItem": {
+        "required": [
+          "id"
+        ],
         "type": "object",
         "properties": {
           "id": {
@@ -134,6 +91,9 @@
         "description": "A Single Element representing some data."
       },
       "RequestBody": {
+        "required": [
+          "dateTime"
+        ],
         "type": "object",
         "properties": {
           "dateTime": {
@@ -148,11 +108,36 @@
         "additionalProperties": false,
         "description": "The request body summary."
       },
+      "StringPaginationGeneric": {
+        "type": "object",
+        "properties": {
+          "pageIndex": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "WeatherResponse": {
+        "required": [
+          "indicators",
+          "requiredNullableString",
+          "requiredString",
+          "temperatureC"
+        ],
         "type": "object",
         "properties": {
           "date": {
-            "$ref": "#/components/schemas/DateOnly"
+            "type": "string",
+            "description": "Date of the entry.",
+            "format": "date",
+            "example": " 2025-01-12 "
           },
           "temperatureC": {
             "type": "integer",
@@ -164,43 +149,48 @@
             "nullable": true
           },
           "notNullableString": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "requiredString": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "requiredNullableString": {
             "type": "string",
             "nullable": true
           },
-          "ids": {
+          "listOfLists": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
             "nullable": true
           },
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MyItem"
-            },
-            "nullable": true
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/MyItem"
+              }
+            }
+          },
+          "indicators": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyEnum"
+            }
+          },
+          "paginationGenericListOfStrings": {
+            "$ref": "#/components/schemas/StringPaginationGeneric"
           },
           "myItem": {
             "$ref": "#/components/schemas/MyItem"
           },
           "indicator": {
             "$ref": "#/components/schemas/MyEnum"
-          },
-          "indicators": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MyEnum"
-            },
-            "nullable": true
           }
         },
         "additionalProperties": false,
