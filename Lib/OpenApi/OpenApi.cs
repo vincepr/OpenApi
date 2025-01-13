@@ -35,13 +35,12 @@ public static class OpenApi
     public static IEnumerable<KeyValuePair<string, OpenApiSchema>> SearchSchemataMatching(
         this OpenApiDocument document, string matcher)
         => document.Components.Schemas.Where(
-            schema => string.Equals(schema.Key, matcher, StringComparison.InvariantCultureIgnoreCase));
+            schema => schema.Key.ToLowerInvariant().Contains(matcher.ToLowerInvariant()));
 
     public static IEnumerable<KeyValuePair<OperationType, OpenApiOperation>> SearchOperationsMatching(
         this OpenApiDocument document, string matcher)
     {
-        var paths = matcher == "" ? document.Paths : document.Paths.Where(p => p.Key.Contains(matcher));
-        foreach (var path in paths)
+        foreach (var path in document.Paths.Where(p => p.Key.Contains(matcher)))
         {
             if (path.Value.UnresolvedReference)
             {
@@ -140,7 +139,7 @@ public static class OpenApi
                     continue;
                 }
                 
-                if (response.Value.UnresolvedReference ||
+                if (response.Value.UnresolvedReference &&
                     response.Value.Reference is not null)
                 {
                     throw new NotImplementedException("try deref");

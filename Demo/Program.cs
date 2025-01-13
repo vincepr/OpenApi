@@ -11,10 +11,10 @@ var (openApiDocument, diagnostic) = await OpenApi.LoadFromApiAsync(
 
 
     var schemata1 = openApiDocument
-        .SearchOperationsMatching("products-integration")
+        .SearchOperationsMatching("")
         .CollectWithDependencies();
 
-    var schemata2 = openApiDocument.SearchSchemataMatching("SubmitProductsCommand").CollectWithDependencies();
+    var schemata2 = openApiDocument.SearchSchemataMatching("").CollectWithDependencies();
 
 
 var orderModelsTxt = ApiSerializer.Serialize(schemata2, diagnostic);
@@ -22,3 +22,6 @@ Console.WriteLine(orderModelsTxt);
 
 // var allModelsTxt = ApiSerializer.Serialize(openApiDocument.Components.Schemas.Select(tuple => tuple.Value), diagnostic);
 // File.WriteAllText("./outfile.cs", allModelsTxt);
+
+
+

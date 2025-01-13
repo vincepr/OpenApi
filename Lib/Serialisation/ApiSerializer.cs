@@ -53,7 +53,7 @@ public class ApiSerializer
 
         while(NonResolvedAnonymousObjs.Count > 0)
         {
-            var artificialObj = NonResolvedAnonymousObjs.First();
+            var artificialObj = NonResolvedAnonymousObjs.Last();
             artificialObj.Value.Reference = new OpenApiReference()
             {
                 Id = artificialObj.Key,
@@ -191,7 +191,7 @@ public class ApiSerializer
     private void HandleObject(string name, OpenApiSchema schema, bool isRequired)
     {
         var objName = schema.Reference?.Id ?? HandleInlineObject(schema);
-        Tab().Append("public ").Append(objName).Required(isRequired).Nullable(schema).Append(' ').Append(name)
+        Tab().Append("public ").Required(isRequired).Append(objName).Nullable(schema).Append(name)
             .Field();
     }
 
