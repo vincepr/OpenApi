@@ -42,10 +42,8 @@ public class LoadDifferentApiFiles
         var (openApiDocument, diagnostic) = await OpenApi.OpenApi
             .LoadFromApiAsync("https://developer.octopia-io.net/wp-content/uploads/2024/02/Seller_02_12_2024.yaml");
         var schemata = openApiDocument
-            .ToApiResponsesForMatcher("categories")
-            .ToApiResponses(isOnlySuccessStatusCode: false)
-            .ToFlatSchemata(openApiDocument);
-        schemata.Count.Should().Be(4);
+            .SearchOperationsMatching("categories");
+        schemata.Count().Should().Be(4);
     }
 
 
