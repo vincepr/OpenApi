@@ -27,7 +27,7 @@ public static class OpenApi
         return (result.OpenApiDocument, result.OpenApiDiagnostic);
     }
 
-    public static string SerializeSpecificationDocument(
+    public static string SerializeSpecificationDocument_YamlOrJson(
         OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic, OpenApiFormat targetFormat = OpenApiFormat.Json)
         => openApiDocument.Serialize(diagnostic.SpecificationVersion, targetFormat)
            ?? throw new SerializationException();
@@ -66,7 +66,7 @@ public static class OpenApi
     /// <param name="set">Collection of schemata.</param>
     /// <param name="schema">The schema to add.</param>
     /// <returns>true if added false if already existing.</returns>
-    private static bool AddWithDeps(this HashSet<OpenApiSchema> set, OpenApiSchema? schema)
+    private static bool AddRecursive(this HashSet<OpenApiSchema> set, OpenApiSchema? schema)
     {
         if (schema is null)
         {
@@ -80,15 +80,25 @@ public static class OpenApi
 
         foreach (var property in schema.Properties)
         {
-            set.AddWithDeps(property.Value);
+            set.AddRecursive(property.Value);
         }
 
         if (schema.Items is not null)
         {
-            set.AddWithDeps(schema.Items);
+            set.AddRecursive(schema.Items);
+            
+            // need to do this because of inline objects.
+            foreach (var prop in schema.Items.Properties)
+            {
+                set.AddRecursive(prop.Value);
+            }
         }
 
         return true;
+    }
+    public class In
+    {
+        
     }
 
     public static IEnumerable<OpenApiSchema> CollectWithDependencies(
@@ -97,7 +107,7 @@ public static class OpenApi
         var set = new HashSet<OpenApiSchema>();
         foreach (var schema in schemata)
         {
-            set.AddWithDeps(schema.Value);
+            set.AddRecursive(schema.Value);
         }
         return set.Where(s => s.Reference is not null);
     }
@@ -113,12 +123,12 @@ public static class OpenApi
             {
                 if (operation.Value.RequestBody.UnresolvedReference || operation.Value.RequestBody.Reference is not null)
                 {
-                    throw new Exception("try deref");
+                    throw new NotImplementedException("try deref");
                 }
 
                 foreach (var requestContent in operation.Value.RequestBody.Content)
                 {
-                    set.AddWithDeps(requestContent.Value.Schema);
+                    set.AddRecursive(requestContent.Value.Schema);
                 }
             }
             
@@ -133,13 +143,13 @@ public static class OpenApi
                 if (response.Value.UnresolvedReference ||
                     response.Value.Reference is not null)
                 {
-                    throw new Exception("try deref");
+                    throw new NotImplementedException("try deref");
                 }
 
                 foreach (var content in response.Value.Content)
                 {
                     // Todo only filter application/json application/text here?
-                    set.AddWithDeps(content.Value.Schema);
+                    set.AddRecursive(content.Value.Schema);
                 }
             }
         }

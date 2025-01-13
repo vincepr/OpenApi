@@ -14,7 +14,6 @@ var (openApiDocument, diagnostic) = await OpenApi.LoadFromApiAsync(
         .SearchOperationsMatching("products-integration")
         .CollectWithDependencies();
 
-
     var schemata2 = openApiDocument.SearchSchemataMatching("SubmitProductsCommand").CollectWithDependencies();
 
 

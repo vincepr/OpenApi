@@ -16,6 +16,8 @@ public class ApiSerializer
     private readonly OpenApiDiagnostic? _openApiDiagnostic;
     private ushort _depth;
     private bool _isFirstClass = true;
+    private Dictionary<string, OpenApiSchema> NonResolvedAnonymousObjs { get; set; } = [];
+    private int AnonymousObjCounter { get; set; } = 0;
 
     public ApiSerializer(ApiSerializerConfig? config, OpenApiDiagnostic? openApiDiagnostic = default)
     {
@@ -47,6 +49,18 @@ public class ApiSerializer
         else
         {
             HandleEnum(schema);
+        }
+
+        while(NonResolvedAnonymousObjs.Count > 0)
+        {
+            var artificialObj = NonResolvedAnonymousObjs.First();
+            artificialObj.Value.Reference = new OpenApiReference()
+            {
+                Id = artificialObj.Key,
+            };
+            NonResolvedAnonymousObjs.Remove(artificialObj.Key);
+            Add(artificialObj.Value);
+            artificialObj.Value.Reference = null;
         }
 
         HandleCloseClass(schema);
@@ -176,13 +190,7 @@ public class ApiSerializer
 
     private void HandleObject(string name, OpenApiSchema schema, bool isRequired)
     {
-        var objName = schema.Reference?.Id;
-        if (objName is null)
-        {
-            Errors.Add($"Inline object encountered for {name}. Using 'object' as fallback.");
-            objName = "object";
-        }
-
+        var objName = schema.Reference?.Id ?? HandleInlineObject(schema);
         Tab().Append("public ").Append(objName).Required(isRequired).Nullable(schema).Append(' ').Append(name)
             .Field();
     }
@@ -251,7 +259,7 @@ public class ApiSerializer
         var itemId = "object";
         itemId = itemSchema switch
         {
-            { Type: "object", } => itemSchema.Reference?.Id ?? "object",
+            { Type: "object", } => itemSchema.Reference?.Id ?? HandleInlineObject(itemSchema),
             { Type: "string", } => "string",
             { Type: "integer", Format: "int32" } => "int",
             { Type: "integer", Format: "int64" } => "long",
@@ -267,6 +275,13 @@ public class ApiSerializer
             _ => throw new UnreachableException($"Unimplemented array type {itemSchema.Type} {itemSchema.Format}"),
         };
         return itemId + (itemSchema.Nullable ? "?>" : ">");
+    }
+
+    private string HandleInlineObject(OpenApiSchema itemSchema)
+    {
+        var id = $"AnonymousObject_{++AnonymousObjCounter}";
+        NonResolvedAnonymousObjs.Add(id , itemSchema);
+        return id;
     }
 
     public static string Serialize(
