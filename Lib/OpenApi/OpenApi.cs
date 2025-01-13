@@ -28,7 +28,7 @@ public static class OpenApi
     }
 
     public static string SerializeSpecificationDocument_YamlOrJson(
-        OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic, OpenApiFormat targetFormat = OpenApiFormat.Json)
+        this OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic, OpenApiFormat targetFormat = OpenApiFormat.Json)
         => openApiDocument.Serialize(diagnostic.SpecificationVersion, targetFormat)
            ?? throw new SerializationException();
 
@@ -94,10 +94,6 @@ public static class OpenApi
         }
 
         return true;
-    }
-    public class In
-    {
-        
     }
 
     public static IEnumerable<OpenApiSchema> CollectWithDependencies(

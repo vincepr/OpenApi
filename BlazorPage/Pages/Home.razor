@@ -4,12 +4,20 @@
 @using OpenApiToModels.Lib.OpenApi
 @using OpenApiToModels.Lib.Serialisation
 @using System.Text
+@using Microsoft.OpenApi
 @inject HttpClient Http
 
 <div class="nav-box dark4">
     <nav class="nav-left">
-        <button class="button" @onclick="ImportFile">Example Data</button>
-        <InputFile OnChange="SingleUpload"/>
+        <button class="button" @onclick="BtnImportFile">Example Data</button>
+        <button class="button" @onclick="BtnToggleFormat">Toggle</button>
+        <input type="text" @bind="MatchingConfig.Matcher"/>
+        <InputSelect @bind-Value="@MatchingConfig.Mode">
+            @foreach (var value in Enum.GetValues<MatchingConfig.MatchMode>()) {
+                <option value="@value">@value</option>
+            }
+        </InputSelect>
+        <InputFile OnChange="BtnSingleUpload"/>
     </nav>
     <nav class="nav-right">
         <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
@@ -76,36 +84,60 @@
 
     // other setup
     private ApiSerializerConfig Config { get; set; } = new();
+    private MatchingConfig MatchingConfig { get; set; } = new();
     private bool IsRecord { get; set; } = false;
     private bool IsTab { get; set; } = false;
     private bool IsReadonlyList { get; set; } = false;
 
-    private async Task SingleUpload(InputFileChangeEventArgs arg)
+
+    private async Task Generate()
+    {
+        Config.Tab = IsTab ? "\t" : "  ";
+        Config.DefaultClassName = IsRecord ? "public record " : "public class ";
+        Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
+
+        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(await _editorLeft.GetValue());
+        openApiDocument.ResolveReferences();
+        var schemata = MatchingConfig.Mode switch
+        {
+            MatchingConfig.MatchMode.Everything => 
+                openApiDocument.Components.Schemas.Select(s => s.Value),
+            MatchingConfig.MatchMode.Path => 
+                openApiDocument.SearchOperationsMatching(MatchingConfig.Matcher).CollectWithDependencies(),
+            MatchingConfig.MatchMode.Classname => 
+                openApiDocument.SearchSchemataMatching(MatchingConfig.Matcher).CollectWithDependencies(),
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+        var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
+        
+        await _editorRight.SetValue(orderModelsTxt);
+    }
+    
+    private async Task BtnSingleUpload(InputFileChangeEventArgs arg)
     {
         MemoryStream ms = new MemoryStream();
         await arg.File.OpenReadStream(maxAllowedSize: 51200000L).CopyToAsync(ms);
         await _editorLeft.SetValue(Encoding.UTF8.GetString(ms.ToArray()));
     }
 
-    private async Task Generate()
-    {
-        Config.Tab = IsTab ? "\t" : "    ";
-        Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-        Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
-
-        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(await _editorLeft.GetValue());
-        var schemata = openApiDocument.Components.Schemas.Select(s => s.Value);
-        var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
-        
-        await _editorRight.SetValue(orderModelsTxt);
-    }
-
-    private async Task ImportFile()
+    private async Task BtnImportFile()
     {
         var str = await Http.GetStringAsync("sample-data/weathercontroller.json");
         await _editorLeft.SetValue(str);
     }
 
+    private async Task BtnToggleFormat()
+    {
+        var val = await _editorLeft.GetValue();
+        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(val);
+        if (val.TrimStart().FirstOrDefault() == '{')
+            await _editorLeft.SetValue(
+                openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Yaml));
+        else
+            
+            await _editorLeft.SetValue(
+                openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Json));
+    }
 }
 
 <style>
