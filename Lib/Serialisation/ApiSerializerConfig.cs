@@ -10,7 +10,14 @@ public record ApiSerializerConfig
     /// <summary>
     /// The characters used for indentation. Default is tab or 2 or 4 spaces.
     /// </summary>
-    public string Tab { get; set; } = "    ";
+    public TabSymbol Tab { get; set; } = TabSymbol.TwoSpace;
+
+    public enum TabSymbol
+    {
+        Tab,
+        TwoSpace,
+        FourSpace
+    }
 
     /// <summary>
     /// If description-data is existing add summary encased in summary-xml-tags.
@@ -58,6 +65,7 @@ public record ApiSerializerConfig
     /// </summary>
     public uint MaxChars { get; set; } = 120;
 }
+
 
 /// <summary>
 /// Object holding configuration around on what to serialize / match.

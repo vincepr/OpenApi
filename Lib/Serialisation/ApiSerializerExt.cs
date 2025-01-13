@@ -12,6 +12,13 @@ namespace OpenApiToModels.Lib.Serialisation;
 /// </summary>
 internal static class ApiSerializerExt
 {
+    public static string AsString(this ApiSerializerConfig.TabSymbol tab) => tab switch
+    {
+        ApiSerializerConfig.TabSymbol.Tab => "\t",
+        ApiSerializerConfig.TabSymbol.TwoSpace => "  ",
+        ApiSerializerConfig.TabSymbol.FourSpace => "    ",
+        _ => "    ",
+    };
     public static string TabRaw(ushort depth, string tab = "\t") => new('\t', depth);
 
     public static string SerializeExampleData(IOpenApiAny? example, OpenApiDiagnostic? openApiVersion)

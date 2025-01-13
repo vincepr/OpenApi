@@ -8,19 +8,15 @@
 @inject HttpClient Http
 
 <div class="nav-box dark4">
-    <nav class="nav-left">
-        <button class="button" @onclick="BtnImportFile">Example Data</button>
-        <button class="button" @onclick="BtnToggleFormat">Toggle</button>
+    <nav class="nav-right">
+        <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
         <input type="text" @bind="MatchingConfig.Matcher"/>
         <InputSelect @bind-Value="@MatchingConfig.Mode">
-            @foreach (var value in Enum.GetValues<MatchingConfig.MatchMode>()) {
+            @foreach (var value in Enum.GetValues<MatchingConfig.MatchMode>())
+            {
                 <option value="@value">@value</option>
             }
         </InputSelect>
-        <InputFile OnChange="BtnSingleUpload"/>
-    </nav>
-    <nav class="nav-right">
-        <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
         <div>
             <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
         </div>
@@ -34,9 +30,6 @@
             <label>TagWrapping</label><input class="toggle" type="checkbox" @bind="Config.IsWrappingEnabled"/>
         </div>
         <div>
-            <label>Tabs</label><input class="toggle" type="checkbox" @bind="IsTab"/>
-        </div>
-        <div>
             <label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
         </div>
         <div>
@@ -48,6 +41,15 @@
         <div>
             <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
         </div>
+        <InputSelect @bind-Value="@Config.Tab">
+            @foreach (var value in Enum.GetValues<ApiSerializerConfig.TabSymbol>())
+            {
+                <option value="@value">@value</option>
+            }
+        </InputSelect>
+        <button class="button" @onclick="BtnImportFile">Example Data</button>
+        <button class="button" @onclick="BtnToggleFormat">Toggle</button>
+        <InputFile OnChange="BtnSingleUpload"/>
     </nav>
 </div>
 
@@ -57,6 +59,7 @@
 </div>
 
 @code {
+
     // monaco editor setup
     private StandaloneCodeEditor _editorLeft = null!;
     private StandaloneCodeEditor _editorRight = null!;
@@ -83,16 +86,14 @@
     }
 
     // other setup
-    private ApiSerializerConfig Config { get; set; } = new();
+    private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
     private MatchingConfig MatchingConfig { get; set; } = new();
     private bool IsRecord { get; set; } = false;
-    private bool IsTab { get; set; } = false;
     private bool IsReadonlyList { get; set; } = false;
 
 
     private async Task Generate()
     {
-        Config.Tab = IsTab ? "\t" : "  ";
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
         Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
 
@@ -100,19 +101,19 @@
         openApiDocument.ResolveReferences();
         var schemata = MatchingConfig.Mode switch
         {
-            MatchingConfig.MatchMode.Everything => 
+            MatchingConfig.MatchMode.Everything =>
                 openApiDocument.Components.Schemas.Select(s => s.Value),
-            MatchingConfig.MatchMode.Path => 
+            MatchingConfig.MatchMode.Path =>
                 openApiDocument.SearchOperationsMatching(MatchingConfig.Matcher).CollectWithDependencies(),
-            MatchingConfig.MatchMode.Classname => 
+            MatchingConfig.MatchMode.Classname =>
                 openApiDocument.SearchSchemataMatching(MatchingConfig.Matcher).CollectWithDependencies(),
             _ => throw new ArgumentOutOfRangeException(),
         };
         var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
-        
+
         await _editorRight.SetValue(orderModelsTxt);
     }
-    
+
     private async Task BtnSingleUpload(InputFileChangeEventArgs arg)
     {
         MemoryStream ms = new MemoryStream();
@@ -134,10 +135,11 @@
             await _editorLeft.SetValue(
                 openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Yaml));
         else
-            
+
             await _editorLeft.SetValue(
                 openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Json));
     }
+
 }
 
 <style>

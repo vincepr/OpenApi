@@ -222,13 +222,13 @@ public class ApiSerializer
         EncloseInTagsCommented(exampleData, isWrappingEnabled: _config.IsWrappingEnabled);
     }
 
-    private StringBuilder Tab() => _str.Append(ApiSerializerExt.TabRaw(_depth, _config.Tab));
+    private StringBuilder Tab() => _str.Append(ApiSerializerExt.TabRaw(_depth, _config.Tab.AsString()));
 
     private void EncloseInTagsCommented(
         string toEnclose, string startTag = "<example>", string endTag = "</example>", bool isWrappingEnabled = false)
     {
         if (toEnclose == string.Empty) return;
-        var preview = ApiSerializerExt.TabRaw(_depth, _config.Tab).Replace("\t", "    ") + "///   " + startTag + endTag;
+        var preview = ApiSerializerExt.TabRaw(_depth, _config.Tab.AsString()).Replace("\t", "    ") + "///   " + startTag + endTag;
         if (preview.Length < _config.MaxChars && toEnclose.Contains("\n") == false && isWrappingEnabled)
         {
             Tab().Append("/// ").Append(startTag).Append(' ').Append(toEnclose).Append(' ').AppendLine(endTag);
