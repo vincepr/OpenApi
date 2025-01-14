@@ -4,63 +4,120 @@
 @using OpenApiToModels.Lib.OpenApi
 @using OpenApiToModels.Lib.Serialisation
 @using System.Text
+@using Microsoft.OpenApi
 @inject HttpClient Http
 
-@* <p role="status">Current count: @currentCount</p> *@
 <div class="nav-box dark4">
-    <nav class="nav-left">
-        <button class="button" @onclick="ImportFile">Example Data</button>
-        <InputFile OnChange="SingleUpload"/>
-    </nav>
     <nav class="nav-right">
         <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
-        <div><label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/></div>
-        <div><label>InlinedEnums</label><input class="toggle" type="checkbox" @bind="Config.IsEnumsInlinedActive"/></div>
-        <div><label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/></div>
-        <div><label>TagWrapping</label><input class="toggle" type="checkbox" @bind="Config.IsWrappingEnabled"/></div>
-        <div><label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/></div>
-        <div><label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/></div>
-        <div><label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/></div>
-        <div><label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/></div>
+        <input type="text" class="input-text" @bind="MatchingConfig.Matcher"/>
+        <InputSelect class="input-text" @bind-Value="@MatchingConfig.Mode">
+            @foreach (var value in Enum.GetValues<MatchingConfig.MatchMode>())
+            {
+                <option value="@value">@value</option>
+            }
+        </InputSelect>
+        <InputSelect class="input-text" @bind-Value="@Config.Tab">
+            @foreach (var value in Enum.GetValues<ApiSerializerConfig.TabSymbol>())
+            {
+                <option value="@value">@value</option>
+            }
+        </InputSelect>
+        <div class="label">
+            <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
+        </div>
+        <div class="label">
+            <label>EnumValues</label><input class="toggle" type="checkbox" @bind="Config.IsEnumsInlinedActive"/>
+        </div>
+        <div class="label">
+            <label>EnumAsString</label><input class="toggle" type="checkbox" @bind="Config.IsEnumAsStringOrInt"/>
+        </div>
+        <div class="label">
+            <label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
+        </div>
+        <div class="label">
+            <label>WrapTags</label><input class="toggle" type="checkbox" @bind="Config.IsWrappingEnabled"/>
+        </div>
+        <div class="label">
+            <label>JsonTags</label><input class="toggle" type="checkbox" @bind="Config.IsJsonPropertyNameTagsEnabled"/>
+        </div>
+        <div class="label">
+            <label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
+        </div>
+        <div class="label">
+            <label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
+        </div>
+        <div class="label">
+            <label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/>
+        </div>
+        <div class="label">
+            <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
+        </div>
+        <button class="button" @onclick="BtnImportFile">Example Data</button>
+        <button class="button" @onclick="BtnToggleFormat">Toggle</button>
+        <label class="button">Upload Json/Yaml<InputFile OnChange="BtnSingleUpload"/></label>
     </nav>
 </div>
 
 <div class="container">
-    <textarea class="left-textarea" wrap="off" @bind="InputText"></textarea>
-    <textarea class="right-textarea" wrap="off" @bind="OutputText"></textarea>
+    <textarea class="left-textarea" wrap="off" @bind="TextLeft"></textarea>
+    <textarea class="right-textarea" wrap="off" @bind="TextRight"></textarea>
 </div>
 
 @code {
-    private string InputText { get; set; } = "";
-    private string OutputText { get; set; } = "";
-    private ApiSerializerConfig Config { get; set; } = new();
-    private bool IsRecord { get; set; } = false;
-    private bool IsTab { get; set; } = false;
+    private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
+    private MatchingConfig MatchingConfig { get; set; } = new();
+    private bool IsRecord { get; set; } = true;
     private bool IsReadonlyList { get; set; } = false;
 
-    private async Task SingleUpload(InputFileChangeEventArgs arg)
-    {
-        MemoryStream ms = new MemoryStream();
-        await arg.File.OpenReadStream(maxAllowedSize:51200000L).CopyToAsync(ms);
-        InputText = Encoding.UTF8.GetString(ms.ToArray());
-    }
+    private string TextLeft { get; set; } = "";
+    private string TextRight { get; set; } = "";
 
-    private void Generate()
+    private async Task Generate()
     {
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-        Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
+        Config.List = IsReadonlyList ? "IReadonlyList<" : "List<";
 
-        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(InputText);
-        var schemata = openApiDocument.Components.Schemas.Select(s => s.Value);
+        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(TextLeft);
+        openApiDocument.ResolveReferences();
+        var schemata = MatchingConfig.Mode switch
+        {
+            MatchingConfig.MatchMode.Everything =>
+                openApiDocument.Components.Schemas.Select(s => s.Value),
+            MatchingConfig.MatchMode.Path =>
+                openApiDocument.SearchOperationsMatching(MatchingConfig.Matcher).CollectWithDependencies(),
+            MatchingConfig.MatchMode.Classname =>
+                openApiDocument.SearchSchemataMatching(MatchingConfig.Matcher).CollectWithDependencies(),
+            _ => throw new ArgumentOutOfRangeException(),
+        };
         var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
-        OutputText = orderModelsTxt;
+
+        TextRight = (orderModelsTxt);
     }
 
-    private async Task ImportFile()
+    private async Task BtnSingleUpload(InputFileChangeEventArgs arg)
+    {
+        MemoryStream ms = new MemoryStream();
+        await arg.File.OpenReadStream(maxAllowedSize: 51200000L).CopyToAsync(ms);
+        TextLeft = (Encoding.UTF8.GetString(ms.ToArray()));
+    }
+
+    private async Task BtnImportFile()
     {
         var str = await Http.GetStringAsync("sample-data/weathercontroller.json");
-        InputText = str;
+        TextLeft = str;
     }
+
+    private async Task BtnToggleFormat()
+    {
+        var val = TextLeft;
+        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(val);
+        if (val.TrimStart().FirstOrDefault() == '{')
+            TextLeft = openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Yaml);
+        else
+            TextLeft = openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Json);
+    }
+
 }
 
 <style>
@@ -90,6 +147,7 @@
   text-align: right;
   padding: 10px 0px;
   font-size: 1rem;
+  gap: 4px;
 }
 
 label {

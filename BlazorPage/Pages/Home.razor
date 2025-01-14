@@ -10,52 +10,52 @@
 <div class="nav-box dark4">
     <nav class="nav-right">
         <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
-        <input type="text" @bind="MatchingConfig.Matcher"/>
-        <InputSelect @bind-Value="@MatchingConfig.Mode">
+        <input type="text" class="input-text" @bind="MatchingConfig.Matcher"/>
+        <InputSelect class="input-text" @bind-Value="@MatchingConfig.Mode">
             @foreach (var value in Enum.GetValues<MatchingConfig.MatchMode>())
             {
                 <option value="@value">@value</option>
             }
         </InputSelect>
-        <div>
-            <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
-        </div>
-        <div>
-            <label>EnumValueTag</label><input class="toggle" type="checkbox" @bind="Config.IsEnumsInlinedActive"/>
-        </div>
-        <div>
-            <label>EnumAsStringOrInt</label><input class="toggle" type="checkbox" @bind="Config.IsEnumAsStringOrInt"/>
-        </div>
-        <div>
-            <label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
-        </div>
-        <div>
-            <label>TagWrapping</label><input class="toggle" type="checkbox" @bind="Config.IsWrappingEnabled"/>
-        </div>
-        <div>
-            <label>JsonTags</label><input class="toggle" type="checkbox" @bind="Config.IsJsonPropertyNameTagsEnabled"/>
-        </div>
-        <div>
-            <label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
-        </div>
-        <div>
-            <label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
-        </div>
-        <div>
-            <label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/>
-        </div>
-        <div>
-            <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
-        </div>
-        <InputSelect @bind-Value="@Config.Tab">
+        <InputSelect class="input-text" @bind-Value="@Config.Tab">
             @foreach (var value in Enum.GetValues<ApiSerializerConfig.TabSymbol>())
             {
                 <option value="@value">@value</option>
             }
         </InputSelect>
+        <div class="label">
+            <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
+        </div>
+        <div class="label">
+            <label>EnumValues</label><input class="toggle" type="checkbox" @bind="Config.IsEnumsInlinedActive"/>
+        </div>
+        <div class="label">
+            <label>EnumAsString</label><input class="toggle" type="checkbox" @bind="Config.IsEnumAsStringOrInt"/>
+        </div>
+        <div class="label">
+            <label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
+        </div>
+        <div class="label">
+            <label>WrapTags</label><input class="toggle" type="checkbox" @bind="Config.IsWrappingEnabled"/>
+        </div>
+        <div class="label">
+            <label>JsonTags</label><input class="toggle" type="checkbox" @bind="Config.IsJsonPropertyNameTagsEnabled"/>
+        </div>
+        <div class="label">
+            <label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
+        </div>
+        <div class="label">
+            <label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
+        </div>
+        <div class="label">
+            <label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/>
+        </div>
+        <div class="label">
+            <label>Comments</label><input class="toggle" type="checkbox" @bind="Config.IsCommentsActive"/>
+        </div>
         <button class="button" @onclick="BtnImportFile">Example Data</button>
         <button class="button" @onclick="BtnToggleFormat">Toggle</button>
-        <InputFile OnChange="BtnSingleUpload"/>
+        <label class="button">Upload Json/Yaml<InputFile OnChange="BtnSingleUpload"/></label>
     </nav>
 </div>
 
@@ -94,14 +94,14 @@
     // other setup
     private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
     private MatchingConfig MatchingConfig { get; set; } = new();
-    private bool IsRecord { get; set; } = false;
+    private bool IsRecord { get; set; } = true;
     private bool IsReadonlyList { get; set; } = false;
 
 
     private async Task Generate()
     {
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-        Config.List = IsReadonlyList ? "List<" : "IReadonlyList<";
+        Config.List = IsReadonlyList ? "IReadonlyList<" : "List<";
 
         var (openApiDocument, diagnostic) = OpenApi.LoadFromText(await _editorLeft.GetValue());
         openApiDocument.ResolveReferences();
@@ -145,10 +145,20 @@
             await _editorLeft.SetValue(
                 openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Json));
     }
-
 }
 
 <style>
+.input-text{
+    min-height: 32px;
+}
+input[type="file"] {
+    display: none;
+}
+.label{
+    display: flex;
+    flex-flow: column wrap;
+    align-items: center;
+}
 /*text boxes:*/
 .container {
     padding: 0;
@@ -205,6 +215,7 @@
   text-align: right;
   padding: 10px 0px;
   font-size: 1rem;
+  gap: 4px;
 }
 
 label {
@@ -302,21 +313,4 @@ label {
   left: 32px;
 }
 
-.dark1Active{
-  background-color: #1E5128 !important;
-}
-.dark2Active{
-  background-color: #4E9F3D !important;
-}
-.dark2Active .fileopen {
-  background-color: #aaa !important;
-}
-.dark3Active{
-  background-color:#252526 !important;
-  color:#f1f3f5;
-}
-.dark4Active{
-  background-color: #1e1e1e !important;
-  color:#f1f3f5;
-}
 </style>
