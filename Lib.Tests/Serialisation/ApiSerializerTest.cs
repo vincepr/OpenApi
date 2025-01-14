@@ -141,6 +141,7 @@ public class ApiSerializerTest
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
         Console.WriteLine(str);
         // Assert
+        str.Should().Contain("[JsonPropertyName(\"indicator\")]");
         str.Should().Contain("[JsonPropertyName(\"temperatureC\")]");
         str.Should().Contain("[JsonPropertyName(\"paginationGenericListOfStrings\")]");
     }

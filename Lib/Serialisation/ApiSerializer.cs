@@ -109,12 +109,17 @@ public class ApiSerializer
 
             HandleSummary(param.Value);
             HandleExamples(param.Value);
-            if (_config.IsJsonPropertyNameTagsEnabled)
-            {
-                Tab().Append("[JsonPropertyName(\"").Append(param.Key).AppendLine("\")]");
-            }
-            
+            HandleInlinedEnum(param.Key, param.Value);
+            HandleJsonPropertyNameTag(param);
             HandleParam(param.Key, param.Value, schema.Required);
+        }
+    }
+
+    private void HandleJsonPropertyNameTag(KeyValuePair<string, OpenApiSchema> param)
+    {
+        if (_config.IsJsonPropertyNameTagsEnabled)
+        {
+            Tab().Append("[JsonPropertyName(\"").Append(param.Key).AppendLine("\")]");
         }
     }
 
@@ -124,7 +129,6 @@ public class ApiSerializer
         bool isReq = requiredParams.Contains(key);
         if (param.Enum is not null && param.Enum.Count > 0)
         {
-            HandleInlinedEnum(key, param);
             // try to deref - if found, we can use that real type here, instead of a string/int for enum values.
             if (param.Reference is not null && _config.IsEnumAsStringOrInt == false &&
                 param.Type is "string" or "number" or "integer" or "object")
