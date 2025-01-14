@@ -1,0 +1,138 @@
+﻿openapi: 3.0.4
+info:
+  title: WebApplication3
+  version: '1.0'
+paths:
+  '/weatherforecast/{id}':
+    post:
+      tags:
+        - WebApplication3
+      operationId: GetWeatherForecast
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: language
+          in: header
+          schema:
+            type: string
+            default: de-DE
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestBody'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WeatherResponse'
+components:
+  schemas:
+    MyEnum:
+      enum:
+        - VALUE
+        - NO_VALUE
+        - MULT_IVALUE
+      type: string
+    MyItem:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: integer
+          description: A required Id.
+          format: int32
+          example: 12312512
+        someNullableId:
+          type: integer
+          description: This id is nullable.
+          format: int32
+          nullable: true
+      additionalProperties: false
+      description: A Single Element representing some data.
+    RequestBody:
+      required:
+        - dateTime
+      type: object
+      properties:
+        dateTime:
+          type: string
+          description: Some DateTime filter. Is required.
+          format: date-time
+        indicator:
+          $ref: '#/components/schemas/MyEnum'
+      additionalProperties: false
+      description: The request body summary.
+    StringPaginationGeneric:
+      type: object
+      properties:
+        pageIndex:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+    WeatherResponse:
+      required:
+        - indicators
+        - requiredNullableString
+        - requiredString
+        - temperatureC
+      type: object
+      properties:
+        date:
+          type: string
+          description: Date of the entry.
+          format: date
+          example: '2025-01-12'
+        temperatureC:
+          type: integer
+          description: Temperature in C.
+          format: int32
+        nullableString:
+          type: string
+          nullable: true
+        notNullableString:
+          type: string
+        requiredString:
+          type: string
+        requiredNullableString:
+          type: string
+          nullable: true
+        listOfLists:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/MyItem'
+        indicators:
+          type: array
+          items:
+            $ref: '#/components/schemas/MyEnum'
+        paginationGenericListOfStrings:
+          $ref: '#/components/schemas/StringPaginationGeneric'
+        myItem:
+          $ref: '#/components/schemas/MyItem'
+        indicator:
+          $ref: '#/components/schemas/MyEnum'
+      additionalProperties: false
+      description: The WeatherForecast element. Represents one day.

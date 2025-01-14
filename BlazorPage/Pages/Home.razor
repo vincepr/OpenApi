@@ -87,7 +87,7 @@
                 Enabled = false,
             },
             ScrollBeyondLastLine = false,
-            Theme = "vs-dark", // default "ace"
+            Theme = "vs", // default "ace"
         };
     }
 
@@ -129,7 +129,7 @@
 
     private async Task BtnImportFile()
     {
-        var str = await Http.GetStringAsync("sample-data/weathercontroller.json");
+        var str = await Http.GetStringAsync("sample-data/sample.yaml");
         await _editorLeft.SetValue(str);
     }
 
