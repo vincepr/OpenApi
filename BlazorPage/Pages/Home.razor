@@ -9,7 +9,15 @@
 
 <div class="nav-box dark4">
     <nav class="nav-right">
-        <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
+        @if (IsGenerating)
+        {
+            <button class="button green disabled" id="btncompile">Working ▶</button>
+            <div class="loadingspinner"></div>
+        }
+        else
+        {
+            <button class="button green " @onclick="Generate" id="btncompile">Generate ▶</button>
+        }
         <input type="text" class="input-text" @bind="MatchingConfig.Matcher"/>
         <InputSelect class="input-text" @bind-Value="@MatchingConfig.Mode">
             @foreach (var value in Enum.GetValues<MatchingConfig.MatchMode>())
@@ -96,28 +104,45 @@
     private MatchingConfig MatchingConfig { get; set; } = new();
     private bool IsRecord { get; set; } = true;
     private bool IsReadonlyList { get; set; } = false;
+    private bool IsGenerating { get; set; } = false;
 
 
     private async Task Generate()
     {
+        IsGenerating = true;
+        await Task.Delay(1);
+
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
         Config.List = IsReadonlyList ? "IReadonlyList<" : "List<";
 
-        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(await _editorLeft.GetValue());
-        openApiDocument.ResolveReferences();
-        var schemata = MatchingConfig.Mode switch
+        try
         {
-            MatchingConfig.MatchMode.Everything =>
-                openApiDocument.Components.Schemas.Select(s => s.Value),
-            MatchingConfig.MatchMode.Path =>
-                openApiDocument.SearchOperationsMatching(MatchingConfig.Matcher).CollectWithDependencies(),
-            MatchingConfig.MatchMode.Classname =>
-                openApiDocument.SearchSchemataMatching(MatchingConfig.Matcher).CollectWithDependencies(),
-            _ => throw new ArgumentOutOfRangeException(),
-        };
-        var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
+            var (openApiDocument, diagnostic) = OpenApi.LoadFromText(await _editorLeft.GetValue());
+            openApiDocument.ResolveReferences();
+            var schemata = MatchingConfig.Mode switch
+            {
+                MatchingConfig.MatchMode.Everything =>
+                    openApiDocument.Components.Schemas.Select(s => s.Value),
+                MatchingConfig.MatchMode.Path =>
+                    openApiDocument.SearchOperationsMatching(MatchingConfig.Matcher).CollectWithDependencies(),
+                MatchingConfig.MatchMode.Classname =>
+                    openApiDocument.SearchSchemataMatching(MatchingConfig.Matcher).CollectWithDependencies(),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
+            var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic, Config);
 
-        await _editorRight.SetValue(orderModelsTxt);
+            await _editorRight.SetValue(orderModelsTxt);
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+        finally
+        {
+            IsGenerating = false;
+            await Task.Delay(1);
+            StateHasChanged();
+        }
     }
 
     private async Task BtnSingleUpload(InputFileChangeEventArgs arg)
@@ -145,9 +170,35 @@
             await _editorLeft.SetValue(
                 openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Json));
     }
+
 }
 
 <style>
+.loadingspinner {
+	pointer-events: none;
+	width: 2.5em;
+	height: 2.5em;
+	border: 0.4em solid transparent;
+	border-color: #eee;
+	border-top-color: #987171;
+	border-radius: 50%;
+	animation: loadingspin 1s linear infinite;
+}
+
+@@keyframes loadingspin {
+	100% {
+			transform: rotate(360deg)
+	}
+}
+body {
+	height: 100vh;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
 .input-text{
     min-height: 32px;
 }
@@ -313,4 +364,7 @@ label {
   left: 32px;
 }
 
+.disabled {
+  background-color: #987171;
+}
 </style>
