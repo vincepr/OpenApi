@@ -207,7 +207,7 @@ public class ApiSerializer
     {
         var possibleValues = string.Join(", ",
             param.Enum.Select(e => ApiSerializerExt.SerializeExampleData(e, _openApiDiagnostic).Trim('\"')));
-        if (_config.IsCommentsActive || _config.IsExamplesActive || _config.IsInlinedEnumsActive)
+        if (_config.IsCommentsActive || _config.IsExamplesActive || _config.IsEnumsInlinedActive)
         {
             EncloseInTagsCommented(possibleValues, "<value>", "</value>", isWrappingEnabled: _config.IsWrappingEnabled);
         }

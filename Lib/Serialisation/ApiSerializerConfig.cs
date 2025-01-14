@@ -33,7 +33,7 @@ public record ApiSerializerConfig
     /// Some models inline enums. Some also string it, even if they keep a reference even if it exists.
     /// In these cases we can at least put all enum values in a tag, to remind us.
     /// </summary>
-    public bool IsInlinedEnumsActive { get; set; } = true;
+    public bool IsEnumsInlinedActive { get; set; } = true;
 
     /// <summary>
     /// class vs record(struct).

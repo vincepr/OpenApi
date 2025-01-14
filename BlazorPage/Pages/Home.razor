@@ -21,7 +21,10 @@
             <label>Capitalize</label><input class="toggle" type="checkbox" @bind="Config.IsCamelCase"/>
         </div>
         <div>
-            <label>InlinedEnums</label><input class="toggle" type="checkbox" @bind="Config.IsInlinedEnumsActive"/>
+            <label>EnumValueTag</label><input class="toggle" type="checkbox" @bind="Config.IsEnumsInlinedActive"/>
+        </div>
+        <div>
+            <label>EnumAsStringOrInt</label><input class="toggle" type="checkbox" @bind="Config.IsEnumAsStringOrInt"/>
         </div>
         <div>
             <label>NoLines</label><input class="toggle" type="checkbox" @bind="Config.IsNoNewlines"/>
