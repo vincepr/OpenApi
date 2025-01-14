@@ -28,7 +28,7 @@ public record ApiSerializerConfig
     /// If example-data is existing add summary encased in summary-xml-tags.
     /// </summary>
     public bool IsExamplesActive { get; set; } = false;
-    
+
     /// <summary>
     /// Some models inline enums. Some also string it, even if they keep a reference even if it exists.
     /// In these cases we can at least put all enum values in a tag, to remind us.
@@ -69,8 +69,13 @@ public record ApiSerializerConfig
     /// Use string or int instead of enum Reference.
     /// </summary>
     public bool IsEnumAsStringOrInt { get; set; } = false;
-}
 
+    /// <summary>
+    /// Use string or int instead of enum Reference.
+    /// </summary>
+    /// <example> [JsonPropertyName("fooItems")]. </example>
+    public bool IsJsonPropertyNameTagsEnabled { get; set; } = false;
+}
 
 /// <summary>
 /// Object holding configuration around on what to serialize / match.

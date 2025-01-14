@@ -28,8 +28,15 @@ public class ApiSerializer
         _depth = 0;
     }
 
+    /// <summary>
+    /// Build the serialized string to memory.
+    /// </summary>
     public string Build() => _str.ToString();
 
+    /// <summary>
+    /// Add the <see cref="OpenApiSchema"/>, representing a single model/class/enum/..., to the serialization.
+    /// </summary>
+    /// <param name="schema"></param>
     public void Add(OpenApiSchema schema)
     {
         if (schema.Reference is null)
@@ -102,6 +109,11 @@ public class ApiSerializer
 
             HandleSummary(param.Value);
             HandleExamples(param.Value);
+            if (_config.IsJsonPropertyNameTagsEnabled)
+            {
+                Tab().Append("[JsonPropertyName(\"").Append(param.Key).AppendLine("\")]");
+            }
+            
             HandleParam(param.Key, param.Value, schema.Required);
         }
     }

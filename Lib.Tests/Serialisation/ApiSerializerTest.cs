@@ -126,8 +126,22 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
         // Assert
-        Console.WriteLine(str);
         str.Should().Contain("/// <summary> Date of the entry. </summary>");
         str.Should().Contain("/// <example> \"2025-01-12\" </example>");
+    }
+    
+    [Test]
+    public void Serialized_IsJsonPropertyNameTags_Enabled()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig() { IsJsonPropertyNameTagsEnabled = true};
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
+        Console.WriteLine(str);
+        // Assert
+        str.Should().Contain("[JsonPropertyName(\"temperatureC\")]");
+        str.Should().Contain("[JsonPropertyName(\"paginationGenericListOfStrings\")]");
     }
 }
