@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Text;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
@@ -19,6 +20,7 @@ internal static class ApiSerializerExt
         ApiSerializerConfig.TabSymbol.FourSpace => "    ",
         _ => "    ",
     };
+
     public static string TabRaw(ushort depth, string tab = "\t") => new('\t', depth);
 
     public static string SerializeExampleData(IOpenApiAny? example, OpenApiDiagnostic? openApiVersion)
@@ -45,6 +47,12 @@ internal static class ApiSerializerExt
     public static StringBuilder Required(this StringBuilder builder, bool isRequired)
         => isRequired ? builder.Append("required ") : builder;
 
-    public static StringBuilder Field(this StringBuilder builder, bool addNewline = true)
-        => addNewline ? builder.AppendLine(" { get; set; }") : builder.Append(" { get; set; }");
+    public static StringBuilder Field(this StringBuilder builder, string fieldName, bool addNewline = true)
+        => addNewline
+            ? builder.Append(fieldName).AppendLine(" { get; set; }")
+            : builder.Append(fieldName).Append(" { get; set; }");
+
+    // Add class-name without '.'. Dotnet does not handle dots in class names well.
+    public static StringBuilder Class(this StringBuilder builder, string value)
+        => builder.Append(value.Replace(".", "_").Replace("-", "__"));
 }

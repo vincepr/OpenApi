@@ -64,6 +64,11 @@ public record ApiSerializerConfig
     /// Max char length used for tag wrapping. Any overflow above this value will force open and closing on newlines.
     /// </summary>
     public uint MaxChars { get; set; } = 120;
+
+    /// <summary>
+    /// Use string or int instead of enum Reference.
+    /// </summary>
+    public bool IsEnumAsStringOrInt { get; set; } = false;
 }
 
 
