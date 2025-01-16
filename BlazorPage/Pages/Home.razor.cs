@@ -15,8 +15,10 @@ public partial class Home
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(StandaloneCodeEditor editor, bool isLeft)
     {
-        return new StandaloneEditorConstructionOptions
+        var options = new StandaloneEditorConstructionOptions
         {
+            OccurrencesHighlight = "off",
+            SelectionHighlight = false,
             AutomaticLayout = true,
             Language = isLeft ? "yaml" : "csharp",
             GlyphMargin = false,
@@ -32,6 +34,13 @@ public partial class Home
             ScrollBeyondLastLine = false,
             Theme = "vs",
         };
+        if (isLeft == false)
+        {
+            options.ReadOnly = true;
+            options.DomReadOnly = true;
+        }
+
+        return options;
     }
 
     private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
