@@ -30,6 +30,20 @@
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script>
+        function hideBlazorErrorUiUsingJavascript() {
+            // Clear the error frame - eg after successful build.
+            document.getElementById("blazor-error-ui").style.display = "none";
+        }
+        window.clipboardCopy = {
+            copyText: function(text) {
+                navigator.clipboard.writeText(text)
+                    .catch(function (error) {
+                        alert(error);
+                    });
+            }
+        };
+    </script>
 </body>
 
 </html>
