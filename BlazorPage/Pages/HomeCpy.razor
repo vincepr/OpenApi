@@ -116,7 +116,7 @@
         await Task.Delay(1);
 
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-        Config.List = IsReadonlyList ? "IReadonlyList<" : "List<";
+        Config.List = IsReadonlyList ? "IReadOnlyList<" : "List<";
 
         try
         {

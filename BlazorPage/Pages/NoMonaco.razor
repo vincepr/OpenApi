@@ -76,7 +76,7 @@
     private async Task Generate()
     {
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-        Config.List = IsReadonlyList ? "IReadonlyList<" : "List<";
+        Config.List = IsReadonlyList ? "IReadOnlyList<" : "List<";
 
         var (openApiDocument, diagnostic) = OpenApi.LoadFromText(TextLeft);
         openApiDocument.ResolveReferences();
