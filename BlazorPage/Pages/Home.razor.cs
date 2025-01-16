@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using BlazorMonaco.Editor;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using Microsoft.OpenApi;
@@ -31,10 +30,7 @@ public partial class Home
                 Enabled = false,
             },
             ScrollBeyondLastLine = false,
-            Theme = "vs", // default "ace"
-            // TODO: set only if detected on mobile: - only on output-editor
-            // ReadOnly = true,
-            // DomReadOnly = true,
+            Theme = "vs",
         };
     }
 

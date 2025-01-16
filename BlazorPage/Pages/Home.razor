@@ -23,8 +23,10 @@
         <CheckboxComponent Label="JsonTags" @bind-Value="Config.IsJsonPropertyNameTagsEnabled"/>
     </div>
     <div class="header-container">
-        
-        <label class="button">Upload Json/Yaml<InputFile OnChange="BtnUploadFile"/></label>
+
+        <label class="button">Upload Json/Yaml
+            <InputFile OnChange="BtnUploadFile"/>
+        </label>
         <button class="button" @onclick="BtnToggleFormat">Toggle Json/Yaml</button>
         <button class="button" @onclick="BtnLoadExampleData">Example Data</button>
         <InputSelect class="input-text" @bind-Value="@Config.Tab">
@@ -44,7 +46,6 @@
         {
             <button class="button disabled" id="btncompile" style="min-width: 8rem">Working ▶</button>
             <div class="loadingspinner"></div>
-            
         }
         else
         {
@@ -55,95 +56,109 @@
     </div>
 
     <div class="editor-container">
-        <StandaloneCodeEditor @ref="_editorLeft" CssClass="editor" Id="editor-left" ConstructionOptions="e => EditorConstructionOptions(e, true)"/>
-        <StandaloneCodeEditor @ref="_editorRight" CssClass="editor" Id="editor-right" ConstructionOptions="e => EditorConstructionOptions(e, false)"/>
+        <StandaloneCodeEditor @ref="_editorLeft" CssClass="editor" Id="editor-left"
+                              ConstructionOptions="e => EditorConstructionOptions(e, true)"/>
+        <StandaloneCodeEditor @ref="_editorRight" CssClass="editor" Id="editor-right"
+                              ConstructionOptions="e => EditorConstructionOptions(e, false)"/>
     </div>
 </div>
 
 <style>
-/* Basic styling for containers and site structure*/
-html,
-body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-.main-container {
-  display: flex;
-  flex-flow: column;
-  height: 100%;
-}
-.header-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap:  0.2rem;
-  justify-content: center;
-}
-.editor-container {
-  flex-grow : 1;
-  display: flex;
-  gap: 1rem;
-}
-@@media screen and (max-width: 800px) {
-  .editor-container {
-    flex-direction: column;
-    padding-right: 3rem;
-  }
-}
-.editor{
-  flex-grow: 1;
-  width: 100%;
-  min-height: 30rem;
-} 
-/*elements*/
-input[type="file"] {
-  display: none;
-}
-.button{
-cursor: pointer;;
--webkit-appearance: button;
-text-transform: none;
-margin: 0;
-font-size: inherit;
-font-family: inherit;
-line-height: inherit;
-border-radius: 0;
-padding-block: 1px;
-text-rendering: auto;
-color: buttontext;
-letter-spacing: normal;
-word-spacing: normal;
-text-indent: 0px;
-text-shadow: none;
-display: inline-block;
-text-align: center;
-align-items: flex-start;
-box-sizing: border-box;
-background-color: buttonface;
-padding-inline: 6px;
-border-width: 2px;
-border-style: outset;
-border-color: buttonborder;
-border-image: initial;
-}
-/*load spinner*/
-.disabled{
-  background-color: #987171;
-}
-.loadingspinner {
-	pointer-events: none;
-	width: 1.5em;
-	height: 1.5em;
-	border: 0.4em solid #eee;border-top-color: #987171;
-	border-radius: 50%;
-	animation: loadingspin 1s linear infinite;
-}
+    /* Basic styling for containers and site structure*/
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
 
-@@keyframes loadingspin {
-	100% {
-			transform: rotate(360deg)
-	}
-}
+    .main-container {
+        background-color: #F1F3F6;
+        display: flex;
+        flex-flow: column;
+        height: 100%;
+    }
+
+    .header-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.2rem;
+        justify-content: center;
+    }
+
+    .editor-container {
+        margin-top: 1rem;
+        flex-grow: 1;
+        display: flex;
+        gap: 1rem;
+    }
+
+    @@media screen and (max-width: 800px) {
+        .editor-container {
+            flex-direction: column;
+            padding-right: 3rem;
+        }
+    }
+
+    .editor {
+        flex-grow: 1;
+        width: 100%;
+        min-height: 30rem;
+    }
+
+    /*elements*/
+    input[type="file"] {
+        display: none;
+    }
+
+    .button {
+        cursor: pointer;;
+        -webkit-appearance: button;
+        text-transform: none;
+        margin: 0;
+        font-size: inherit;
+        font-family: inherit;
+        line-height: inherit;
+        border-radius: 0;
+        padding-block: 1px;
+        text-rendering: auto;
+        color: buttontext;
+        letter-spacing: normal;
+        word-spacing: normal;
+        text-indent: 0px;
+        text-shadow: none;
+        display: inline-block;
+        text-align: center;
+        align-items: flex-start;
+        box-sizing: border-box;
+        background-color: buttonface;
+        padding-inline: 6px;
+        border-width: 2px;
+        border-style: outset;
+        border-color: buttonborder;
+        border-image: initial;
+    }
+
+    /*load spinner*/
+    .disabled {
+        background-color: #987171;
+    }
+
+    .loadingspinner {
+        pointer-events: none;
+        width: 1.5em;
+        height: 1.5em;
+        border: 0.4em solid #eee;
+        border-top-color: #987171;
+        border-radius: 50%;
+        animation: loadingspin 1s linear infinite;
+    }
+
+    @@keyframes loadingspin {
+        100% {
+            transform: rotate(360deg)
+        }
+    }
 </style>
 
 
