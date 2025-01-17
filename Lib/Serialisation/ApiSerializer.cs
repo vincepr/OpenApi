@@ -49,6 +49,7 @@ public class ApiSerializer
         else Tab().AppendLine();
 
         HandleSummary(schema);
+        HandleExamples(schema);
         if (schema.Enum is null || schema.Enum.Count == 0)
         {
             HandleOpenClass(schema);

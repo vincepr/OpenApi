@@ -159,29 +159,29 @@ public class ApiSerializerTest
         str.Should().Contain("[JsonPropertyName(\"paginationGenericListOfStrings\")]");
     }
     
-    // [Description("Dictionary models used for the dictionary unit tests:")]
-    // // public class WeatherResponse
-    // // {
-    // //     public Dictionary<string, bool> A1 { get; set; }
-    // //     public Dictionary<string, int> A2 { get; set; }
-    // //     public Dictionary<string, List<int>> A3 { get; set; }
-    // //     public Dictionary<string, MyEnum> A4 { get; set; }
-    // //     public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }
-    // //     public Dictionary<string, MyItem> A6 { get; set; }
-    // //     public Dictionary<MyEnum, MyEnum> E1 { get; set; }
-    // //     public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }
-    // // }
-    // [Test]
-    // public void Serialized_Dictionary()
+    [Description("Dictionary models used for the dictionary unit tests:")]
+    // public class WeatherResponse
     // {
-    //     // Arrange
-    //     var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(DictionaryYaml));
-    //     var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
-    //     var c = new ApiSerializerConfig();
-    //     // Act
-    //     var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
-    //     Console.WriteLine(str);
-    //     // Assert
-    //     str.Should().Contain("public Dictionary<string, int> DictOfStringToInt { get; set; }");
+    //     public Dictionary<string, bool> A1 { get; set; }
+    //     public Dictionary<string, int> A2 { get; set; }
+    //     public Dictionary<string, List<int>> A3 { get; set; }
+    //     public Dictionary<string, MyEnum> A4 { get; set; }
+    //     public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }
+    //     public Dictionary<string, MyItem> A6 { get; set; }
+    //     public Dictionary<MyEnum, MyEnum> E1 { get; set; }
+    //     public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }
     // }
+    [Test]
+    public void Serialized_Dictionary()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(DictionaryYaml));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig();
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
+        Console.WriteLine(str);
+        // Assert
+        str.Should().Contain("public Dictionary<string, int> DictOfStringToInt { get; set; }");
+    }
 }
