@@ -106,7 +106,6 @@ public class ApiSerializer
         {
             if (isFirstParam || _config.IsNoNewlines) isFirstParam = false;
             else Tab().AppendLine();
-
             HandleSummary(param.Value);
             HandleExamples(param.Value);
             HandleInlinedEnum(param.Key, param.Value);
@@ -121,6 +120,27 @@ public class ApiSerializer
         {
             Tab().Append("[JsonPropertyName(\"").Append(param.Key).AppendLine("\")]");
         }
+    }
+    
+    private bool TryHandleIfDictionary(string key, OpenApiSchema dict, ISet<string> requiredParams)
+    {
+        var fieldName = _config.IsCamelCase ? key.ToTitleCase() : key;
+        var isReq = requiredParams.Contains(key);
+        if (dict.AdditionalPropertiesAllowed && 
+            (dict.AdditionalProperties is null || dict.AdditionalProperties.Properties.Count == 0))
+        {
+            Tab().Append("public ").Required(isReq).Append("Dictionary<string, object> ").Nullable(dict).Field(fieldName);
+            return true;
+        }
+
+        if (dict.AdditionalProperties is not null)
+        {
+            var itemId = GetTypeRecursive(dict.AdditionalProperties);
+            Tab().Append("public ").Required(isReq).Append("Dictionary<string, ").Class(itemId)
+                .Nullable(dict).Field(fieldName);
+        }
+
+        return false;
     }
 
     private void HandleParam(string key, OpenApiSchema param, ISet<string> requiredParams)
@@ -142,7 +162,6 @@ public class ApiSerializer
                 }
             }
         }
-
 
         // TODO: clean this up - switch expression with just all repeating Tab()... drawn out.
         switch (((param.Type ?? string.Empty).ToLowerInvariant(), (param.Format ?? string.Empty).ToLowerInvariant()))
@@ -199,7 +218,7 @@ public class ApiSerializer
                 HandleObject(field, param, isRequired: isReq);
                 break;
             default:
-                // TODO: handle AllOf | OneOf |AnyOf (eg for enums)
+                // TODO: handle AllOf | OneOf | AnyOf
                 Errors.Add($"Unknown Param type {param.Type} {param.Format} for {field}");
                 throw new NotImplementedException(
                     $"Unknown Param type {param.Type} {param.Format} for {field}"); // TODO: remove after testing
@@ -219,7 +238,7 @@ public class ApiSerializer
 
     private void HandleObject(string fieldName, OpenApiSchema schema, bool isRequired)
     {
-        var objName = schema.Reference?.Id ?? HandleInlineObject(schema);
+        var objName = GetTypeRecursive(schema);
         Tab().Append("public ").Required(isRequired).Class(objName).Nullable(schema).Field(fieldName);
     }
 
@@ -275,14 +294,14 @@ public class ApiSerializer
 
     private void HandleArray(string fieldName, OpenApiSchema arraySchema, bool isArrayRequired)
     {
-        var itemId = GetListedTypeRecursive(arraySchema);
-        Tab().Append("public ").Required(isArrayRequired).Append(_config.List).Class(itemId)
+        var itemId = GetTypeRecursive(arraySchema.Items);
+        Tab().Append("public ").Required(isArrayRequired).Append(_config.List).Class(itemId).Append('>')
             .Nullable(arraySchema).Field(fieldName);
     }
 
-    private string GetListedTypeRecursive(OpenApiSchema arraySchema)
+    // resolves List<List<...>>
+    private string GetTypeRecursive(OpenApiSchema itemSchema)
     {
-        var itemSchema = arraySchema.Items;
         var itemId = "object";
         itemId = itemSchema switch
         {
@@ -297,11 +316,11 @@ public class ApiSerializer
             { Type: "number", Format: "float" } => "float",
             { Type: "number", } => "double",
             { Type: "boolean", } => "bool",
-            { Type: "array", } => $"{_config.List}{GetListedTypeRecursive(itemSchema)}",
+            { Type: "array", } => $"{_config.List}{GetTypeRecursive(itemSchema.Items)}>",
             { Type: null, Format: null } => $"object", // inline object. This fallback seems sane enough.
-            _ => throw new UnreachableException($"Unimplemented array type {itemSchema.Type} {itemSchema.Format}"),
+            _ => throw new UnreachableException($"Unimplemented array type {itemSchema?.Type} {itemSchema?.Format}"),
         };
-        return itemId + (itemSchema.Nullable ? "?>" : ">");
+        return itemSchema.Nullable ? itemId + "?" : itemId;
     }
 
     private string HandleInlineObject(OpenApiSchema itemSchema)

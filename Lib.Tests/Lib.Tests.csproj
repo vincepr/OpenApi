@@ -25,9 +25,6 @@
     
     <!-- Copy over the test files to work for our unit test -->
     <ItemGroup>
-<!--        <None Include="$(SolutionDir)\Lib.Tests\IntegrationTests\samplefiles\**"-->
-<!--              CopyToOutputDirectory="PreserveNewest"-->
-<!--              LinkBase="config\" />-->
         <None Update="samplefiles\*.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
@@ -36,12 +33,6 @@
         </None>
         <None Update="samplefiles\*.yml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="samplefiles\inlineenums.json">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Update="samplefiles\withannotations.json">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
