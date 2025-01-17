@@ -121,15 +121,16 @@ public class ApiSerializer
             Tab().Append("[JsonPropertyName(\"").Append(param.Key).AppendLine("\")]");
         }
     }
-    
+
     private bool TryHandleIfDictionary(string key, OpenApiSchema dict, ISet<string> requiredParams)
     {
         var fieldName = _config.IsCamelCase ? key.ToTitleCase() : key;
         var isReq = requiredParams.Contains(key);
-        if (dict.AdditionalPropertiesAllowed && 
+        if (dict.AdditionalPropertiesAllowed &&
             (dict.AdditionalProperties is null || dict.AdditionalProperties.Properties.Count == 0))
         {
-            Tab().Append("public ").Required(isReq).Append("Dictionary<string, object> ").Nullable(dict).Field(fieldName);
+            Tab().Append("public ").Required(isReq).Append("Dictionary<string, object> ").Nullable(dict)
+                .Field(fieldName);
             return true;
         }
 
@@ -157,73 +158,45 @@ public class ApiSerializer
                 if (schemas is not null && schemas.TryGetValue(param.Reference.Id, out var deReferenced) &&
                     deReferenced.Reference is not null)
                 {
-                    Tab().Append("public ").Required(isReq).Class(deReferenced.Reference.Id).Nullable(param).Field(field);
+                    Tab().Append("public ").Required(isReq).Class(deReferenced.Reference.Id).Nullable(param)
+                        .Field(field);
                     return;
                 }
             }
         }
 
         // TODO: clean this up - switch expression with just all repeating Tab()... drawn out.
-        switch (((param.Type ?? string.Empty).ToLowerInvariant(), (param.Format ?? string.Empty).ToLowerInvariant()))
+        string? id = (((param.Type ?? string.Empty).ToLowerInvariant(),
+                (param.Format ?? string.Empty).ToLowerInvariant())) switch
+            {
+                (null, _) or ("", _) => null, // TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
+                ("string", _) => "string",
+                ("integer", "int32") or ("number", "int32") => "int",
+                ("integer", "int64") or ("number", "int64") => "long",
+                ("integer", _) => "int",
+                ("number", "double") => "double",
+                ("number", "float") => "float",
+                ("number", _) => "double",
+                ("boolean", _) => "bool",
+                ("array", _) => param.Items is not null 
+                    ? GetArrayId(param) 
+                    : FailWith($"Unknown Array type {param.Type} {param.Format} for {field}. - Expected Items-schema to exist and describe array items"),
+                ("object", _) => GetObjectId(param),
+                _ => FailWith($"Unknown Param type {param.Type} {param.Format} for {field}"),
+        };
+        
+        if (id is null)
         {
-            case (null, _) or ("", _):
-                return; // TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
-            case ("string", _):
-                Tab().Append("public ").Required(isReq).Append("string").Nullable(param).Field(field);
-                break;
-            case ("integer", "int32") or ("number", "int32"):
-                Tab().Append("public ").Required(isReq).Append("int").Nullable(param).Field(field);
-                break;
-            case ("integer", "int64") or ("number", "int64"):
-                Tab().Append("public ").Required(isReq).Append("long").Nullable(param).Field(field);
-                break;
-            case ("integer", _):
-                Tab().Append("public ").Required(isReq).Append("int").Nullable(param).Field(field);
-                if (param.Format is not null)
-                {
-                    Errors.Add($"Unknown Param type {param.Type} {param.Format} for {field}");
-                    throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
-                }
-
-                break;
-            case ("number", "double"):
-                Tab().Append("public ").Required(isReq).Append("double").Nullable(param).Field(field);
-                break;
-            case ("number", "float"):
-                Tab().Append("public ").Required(isReq).Append("float").Nullable(param).Field(field);
-                break;
-            case ("number", _):
-                Tab().Append("public ").Required(isReq).Append("double").Nullable(param).Field(field);
-                if (param.Format is not null)
-                {
-                    Errors.Add($"Unknown Param type {param.Type} {param.Format} for {field}");
-                    throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
-                }
-
-                break;
-            case ("boolean", _):
-                Tab().Append("public ").Required(isReq).Append("bool").Nullable(param).Field(field);
-                break;
-            case ("array", _):
-                if (param.Items is null)
-                {
-                    Errors.Add(
-                        $"Unknown Array type {param.Type} {param.Format} for {field}. - Expected Items-schema to exist and describe array items");
-                    return;
-                }
-
-                HandleArray(field, param, isArrayRequired: isReq);
-                break;
-            case ("object", _):
-                HandleObject(field, param, isRequired: isReq);
-                break;
-            default:
-                // TODO: handle AllOf | OneOf | AnyOf
-                Errors.Add($"Unknown Param type {param.Type} {param.Format} for {field}");
-                throw new NotImplementedException(
-                    $"Unknown Param type {param.Type} {param.Format} for {field}"); // TODO: remove after testing
-                break;
+            return;
         }
+        
+        Tab().Append("public ").Required(isReq).Append(id).Nullable(param).Field(field);
+    }
+
+    private string? FailWith(string message)
+    {
+        Errors.Add(message);
+        return null;
     }
 
     private void HandleInlinedEnum(string name, OpenApiSchema param)
@@ -236,11 +209,7 @@ public class ApiSerializer
         }
     }
 
-    private void HandleObject(string fieldName, OpenApiSchema schema, bool isRequired)
-    {
-        var objName = GetTypeRecursive(schema);
-        Tab().Append("public ").Required(isRequired).Class(objName).Nullable(schema).Field(fieldName);
-    }
+    private string GetObjectId(OpenApiSchema schema) => GetTypeRecursive(schema);
 
     private void HandleOpenClass(OpenApiSchema schema)
     {
@@ -292,18 +261,15 @@ public class ApiSerializer
         Tab().Append("/// ").AppendLine(endTag);
     }
 
-    private void HandleArray(string fieldName, OpenApiSchema arraySchema, bool isArrayRequired)
+    private string GetArrayId(OpenApiSchema arraySchema)
     {
-        var itemId = GetTypeRecursive(arraySchema.Items);
-        Tab().Append("public ").Required(isArrayRequired).Append(_config.List).Class(itemId).Append('>')
-            .Nullable(arraySchema).Field(fieldName);
+        return $"{_config.List}{GetTypeRecursive(arraySchema.Items)}>";
     }
 
     // resolves List<List<...>>
     private string GetTypeRecursive(OpenApiSchema itemSchema)
     {
-        var itemId = "object";
-        itemId = itemSchema switch
+        var itemId = itemSchema switch
         {
             { Type: "object", } => itemSchema.Reference?.Id ?? HandleInlineObject(itemSchema),
             { Type: "string", } => "string",
