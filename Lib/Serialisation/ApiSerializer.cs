@@ -148,24 +148,18 @@ public class ApiSerializer
     {
         var field = _config.IsCamelCase ? key.ToTitleCase() : key;
         bool isReq = requiredParams.Contains(key);
-        if (param.Enum is not null && param.Enum.Count > 0)
+        if (IsEnumAndAbleToBeDereferenced(param))
         {
-            // try to deref - if found, we can use that real type here, instead of a string/int for enum values.
-            if (param.Reference is not null && _config.IsEnumAsStringOrInt == false &&
-                param.Type is "string" or "number" or "integer" or "object")
+            var schemas = param.Reference.HostDocument?.Components.Schemas;
+            if (schemas is not null && schemas.TryGetValue(param.Reference.Id, out var deReferenced) &&
+                deReferenced.Reference is not null)
             {
-                var schemas = param.Reference.HostDocument?.Components.Schemas;
-                if (schemas is not null && schemas.TryGetValue(param.Reference.Id, out var deReferenced) &&
-                    deReferenced.Reference is not null)
-                {
-                    Tab().Append("public ").Required(isReq).Class(deReferenced.Reference.Id).Nullable(param)
-                        .Field(field);
-                    return;
-                }
+                Tab().Append("public ").Required(isReq).Class(deReferenced.Reference.Id).Nullable(param)
+                    .Field(field);
+                return;
             }
         }
 
-        // TODO: clean this up - switch expression with just all repeating Tab()... drawn out.
         string? id = (((param.Type ?? string.Empty).ToLowerInvariant(),
                 (param.Format ?? string.Empty).ToLowerInvariant())) switch
             {
@@ -191,6 +185,14 @@ public class ApiSerializer
         }
         
         Tab().Append("public ").Required(isReq).Append(id).Nullable(param).Field(field);
+    }
+
+    private bool IsEnumAndAbleToBeDereferenced(OpenApiSchema param)
+    {
+        // we can try to deref enum. So we can use that real reference-enum here, instead of a string/int field.
+        return param.Enum is not null && param.Enum.Count > 0 &&
+               _config.IsEnumAsStringOrInt == false && param.Reference is not null && 
+               param.Type is "string" or "number" or "integer" or "object";
     }
 
     private string? FailWith(string message)
