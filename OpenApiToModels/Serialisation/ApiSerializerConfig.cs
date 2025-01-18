@@ -47,7 +47,7 @@ public record ApiSerializerConfig
     /// <summary>
     /// Use record over class.
     /// </summary>
-    public bool IsRecord { get; set; } = false;
+    public bool IsRecord { get; set; } = true;
 
     /// <summary>
     /// List vs IReadonlyList.
@@ -83,20 +83,4 @@ public record ApiSerializerConfig
     /// Max char length used for tag wrapping. Any overflow above this value will force open and closing on newlines.
     /// </summary>
     public uint MaxChars { get; set; } = 120;
-}
-
-/// <summary>
-/// Object holding configuration around on what to serialize / match.
-/// </summary>
-public record MatchingConfig
-{
-    public MatchMode Mode { get; set; } = MatchMode.Path;
-    public string Matcher { get; set; } = "";
-
-    public enum MatchMode
-    {
-        Everything,
-        Path,
-        Classname,
-    }
 }

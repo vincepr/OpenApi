@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
+using OpenApiToModels.Extensions;
 
 namespace OpenApiToModels.Serialisation;
 
@@ -84,7 +85,7 @@ public class ApiSerializer
 
     private void HandleOpenClass(OpenApiSchema schema)
     {
-        Tab().Append(_config.IsRecord ? "public record " : "public class").Class(schema.Reference.Id).AppendLine();
+        Tab().Append(_config.IsRecord ? "public record " : "public class ").Class(schema.Reference.Id).AppendLine();
         Tab().AppendLine("{");
         _depth++;
     }

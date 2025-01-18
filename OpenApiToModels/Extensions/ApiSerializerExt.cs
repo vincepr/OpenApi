@@ -4,8 +4,9 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 using Microsoft.OpenApi.Writers;
+using OpenApiToModels.Serialisation;
 
-namespace OpenApiToModels.Serialisation;
+namespace OpenApiToModels.Extensions;
 
 /// <summary>
 /// Static extension methods for <see cref="ApiSerializer"/> and adjacent functionality.

@@ -3,7 +3,7 @@ using BlazorMonaco.Editor;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using Microsoft.OpenApi;
-using OpenApiToModels.OpenApi;
+using OpenApiToModels.Extensions;
 using OpenApiToModels.Serialisation;
 
 namespace BlazorPage.Pages;
@@ -54,15 +54,15 @@ public partial class Home
         
         try
         {
-            var (openApiDocument, diagnostic) = OpenApi.LoadFromText(await _editorLeft.GetValue());
+            var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(await _editorLeft.GetValue());
             openApiDocument.ResolveReferences();
             var schemata = MatchingConfig.Mode switch
             {
-                MatchingConfig.MatchMode.Everything =>
+                MatchingConfig.MatchMode.All =>
                     openApiDocument.Components.Schemas.Select(s => s.Value),
                 MatchingConfig.MatchMode.Path =>
                     openApiDocument.SearchOperationsMatching(MatchingConfig.Matcher).CollectWithDependencies(),
-                MatchingConfig.MatchMode.Classname =>
+                MatchingConfig.MatchMode.Class =>
                     openApiDocument.SearchSchemataMatching(MatchingConfig.Matcher).CollectWithDependencies(),
                 _ => throw new ArgumentOutOfRangeException(),
             };
@@ -104,7 +104,7 @@ public partial class Home
     private async Task BtnToggleFormat()
     {
         var val = await _editorLeft.GetValue();
-        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(val);
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(val);
         if (val.TrimStart().FirstOrDefault() == '{')
             await _editorLeft.SetValue(
                 openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Yaml));

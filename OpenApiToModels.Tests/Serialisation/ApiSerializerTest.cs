@@ -1,4 +1,5 @@
-﻿using OpenApiToModels.Serialisation;
+﻿using OpenApiToModels.Extensions;
+using OpenApiToModels.Serialisation;
 
 namespace OpenApiToModels.Tests.Serialisation;
 
@@ -14,7 +15,7 @@ public class ApiSerializerTest
     public void Serialized_SummaryTags()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(WeatherJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         var config = new ApiSerializerConfig() with { IsCommentsActive = true };
         // Act
@@ -32,7 +33,7 @@ public class ApiSerializerTest
     public void Serialized_Class()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(WeatherJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
@@ -45,7 +46,7 @@ public class ApiSerializerTest
     public void Serialized_IntEnumInOwnClass()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(WeatherJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "DayOfWeek")], diagnostic);
@@ -63,7 +64,7 @@ public class ApiSerializerTest
     public void Serialized_StringEnumInOwnClass()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(WeatherJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "MyEnum")], diagnostic);
@@ -79,7 +80,7 @@ public class ApiSerializerTest
     public void Serialized_WithAnnotations_CorrectNullability()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
@@ -92,7 +93,7 @@ public class ApiSerializerTest
     public void Serialized_WithAnnotations_CorrectRequired()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
@@ -105,7 +106,7 @@ public class ApiSerializerTest
     public void Serialized_InlineEnums_ValuesSerializedToValueTag()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(InlineEnumJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(InlineEnumJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
@@ -120,7 +121,7 @@ public class ApiSerializerTest
     public void Serialized_List_And_Items_Correct()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
@@ -135,7 +136,7 @@ public class ApiSerializerTest
     public void Serialized_Examples_DoWrap_IfUnder120Chars()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         var c = new ApiSerializerConfig() { IsWrappingEnabled = true, IsExamplesActive = true, IsCommentsActive = true};
         // Act
@@ -149,7 +150,7 @@ public class ApiSerializerTest
     public void Serialized_IsJsonPropertyNameTags_Enabled()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         var c = new ApiSerializerConfig() { IsJsonPropertyNameTagsEnabled = true};
         // Act
@@ -164,7 +165,7 @@ public class ApiSerializerTest
     public void Serialized_DateTimeAndDateTimeOffset_Used()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(AnnotationsJson));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         var c = new ApiSerializerConfig();
         // Act
@@ -178,7 +179,7 @@ public class ApiSerializerTest
     public void Serialized_Dictionary()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(DictionaryYaml));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(DictionaryYaml));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         var c = new ApiSerializerConfig();
         // Act
@@ -198,7 +199,7 @@ public class ApiSerializerTest
     public void Serialized_Dictionary_FreeformObjects()
     {
         // Arrange
-        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(DictionaryYaml));
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(DictionaryYaml));
         var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
         var c = new ApiSerializerConfig();
         // Act

@@ -1,6 +1,6 @@
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
-using OpenApiToModels.OpenApi;
+using OpenApiToModels.Extensions;
 using OpenApiToModels.Serialisation;
 
 namespace OpenApiToModels.Tests.integrationtests;
@@ -38,7 +38,7 @@ public class LoadDifferentApiFiles
     [Test]
     public async Task MatchingPath_ExpectedSchemataCount_Found()
     {
-        var (openApiDocument, diagnostic) = await OpenApi.OpenApi
+        var (openApiDocument, diagnostic) = await OpenApiExt
             .LoadFromApiAsync("https://developer.octopia-io.net/wp-content/uploads/2024/02/Seller_02_12_2024.yaml");
         var schemata = openApiDocument
             .SearchOperationsMatching("categories");
@@ -83,7 +83,7 @@ public class LoadDifferentApiFiles
         Console.WriteLine($"Found {Directory.GetFiles("./samplefiles").Length} OpenApiFiles to test");
         foreach (var file in Directory.GetFiles("./samplefiles").Where(path => path.Contains("result") == false))
         {
-            var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(file));
+            var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(file));
             yield return (openApiDocument, diagnostic, file);
         }
     }
@@ -99,7 +99,7 @@ public class LoadDifferentApiFiles
         Console.WriteLine($"Found {urls.Count} OpenApiFiles to test from urls.");
         foreach (var url in urls)
         {
-            var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromApiAsync(url).GetAwaiter().GetResult();
+            var (openApiDocument, diagnostic) = OpenApiExt.LoadFromApiAsync(url).GetAwaiter().GetResult();
             yield return (openApiDocument, diagnostic, url);
         }
     }

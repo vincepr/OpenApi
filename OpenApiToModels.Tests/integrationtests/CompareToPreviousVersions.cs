@@ -1,4 +1,5 @@
-﻿using OpenApiToModels.Serialisation;
+﻿using OpenApiToModels.Extensions;
+using OpenApiToModels.Serialisation;
 
 namespace OpenApiToModels.Tests.integrationtests;
 
@@ -16,7 +17,7 @@ public class CompareToPreviousVersions
                 IsCommentsActive = true,
                 IsExamplesActive = true,
                 IsEnumsInlinedActive = true,
-                IsRecord = true,
+                IsRecord = false,
                 IsReadonly = true,
                 IsCamelCase = false,
                 IsNoNewlines = true,
@@ -35,7 +36,7 @@ public class CompareToPreviousVersions
         {
             foreach (var config in configs)
             {
-                var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(path));
+                var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(File.ReadAllText(path));
                 var str =
                     ApiSerializer.Serialize(openApiDocument.Components.Schemas.Select(s => s.Value), diagnostic, config.Item2);
                 var oldVersion = File.ReadAllText(path + ".result." + config.ModeName + ".output");

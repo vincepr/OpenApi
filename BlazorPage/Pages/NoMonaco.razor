@@ -3,7 +3,7 @@
 <PageTitle>No Monaco Editor - just textarea</PageTitle>
 @using System.Text
 @using Microsoft.OpenApi
-@using OpenApiToModels.OpenApi
+@using OpenApiToModels.Extensions
 @using OpenApiToModels.Serialisation
 @inject HttpClient Http
 
@@ -73,15 +73,15 @@
 
     private void Generate()
     {
-        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(TextLeft);
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(TextLeft);
         openApiDocument.ResolveReferences();
         var schemata = MatchingConfig.Mode switch
         {
-            MatchingConfig.MatchMode.Everything =>
+            MatchingConfig.MatchMode.All =>
                 openApiDocument.Components.Schemas.Select(s => s.Value),
             MatchingConfig.MatchMode.Path =>
                 openApiDocument.SearchOperationsMatching(MatchingConfig.Matcher).CollectWithDependencies(),
-            MatchingConfig.MatchMode.Classname =>
+            MatchingConfig.MatchMode.Class =>
                 openApiDocument.SearchSchemataMatching(MatchingConfig.Matcher).CollectWithDependencies(),
             _ => throw new ArgumentOutOfRangeException(),
         };
@@ -106,7 +106,7 @@
     private async Task BtnToggleFormat()
     {
         var val = TextLeft;
-        var (openApiDocument, diagnostic) = OpenApi.LoadFromText(val);
+        var (openApiDocument, diagnostic) = OpenApiExt.LoadFromText(val);
         if (val.TrimStart().FirstOrDefault() == '{')
             TextLeft = openApiDocument.SerializeSpecificationDocument_YamlOrJson(diagnostic, OpenApiFormat.Yaml);
         else

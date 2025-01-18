@@ -5,9 +5,11 @@ using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 
-namespace OpenApiToModels.OpenApi;
-
-public static class OpenApi
+namespace OpenApiToModels.Extensions;
+/// <summary>
+/// Static extension methods for <see cref="Microsoft.OpenApi"/> and adjacent functionality.
+/// </summary>
+public static class OpenApiExt
 {
     public static (OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic) LoadFromText(string inputText)
     {
