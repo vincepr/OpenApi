@@ -17,7 +17,7 @@ public class CompareToPreviousVersions
                 IsExamplesActive = true,
                 IsEnumsInlinedActive = true,
                 DefaultClassName = "public class ",
-                List = "IReadonlyList<",
+                IsReadonly = true,
                 IsCamelCase = false,
                 IsNoNewlines = true,
                 IsWrappingEnabled = true,
