@@ -152,28 +152,6 @@ public class ApiSerializer
         }
     }
 
-    private bool TryHandleIfDictionary(string key, OpenApiSchema dict, ISet<string> requiredParams)
-    {
-        var fieldName = _config.IsCamelCase ? key.ToTitleCase() : key;
-        var isReq = requiredParams.Contains(key);
-        if (dict.AdditionalPropertiesAllowed &&
-            (dict.AdditionalProperties is null || dict.AdditionalProperties.Properties.Count == 0))
-        {
-            Tab().Append("public ").Required(isReq).Append("Dictionary<string, object> ").Nullable(dict)
-                .Field(fieldName);
-            return true;
-        }
-
-        if (dict.AdditionalProperties is not null)
-        {
-            var itemId = GetTypeRecursive(dict.AdditionalProperties);
-            Tab().Append("public ").Required(isReq).Append("Dictionary<string, ").Class(itemId)
-                .Nullable(dict).Field(fieldName);
-        }
-
-        return false;
-    }
-
     private void HandleParam(string key, OpenApiSchema param, ISet<string> requiredParams)
     {
         var field = _config.IsCamelCase ? key.ToTitleCase() : key;
@@ -190,70 +168,14 @@ public class ApiSerializer
             }
         }
 
-        // public class WeatherResponse
-        // {
-        //     public Dictionary<string, bool> A1 { get; set; }
-        //     public Dictionary<string, int> A2 { get; set; }
-        //     public Dictionary<string, List<int>> A3 { get; set; }
-        //     public Dictionary<string, MyEnum> A4 { get; set; }
-        //     public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }
-        //     public Dictionary<string, MyItem> A6 { get; set; }
-        //     public Dictionary<MyEnum, MyEnum> E1 { get; set; }
-        //     public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }
-        // }
-        if (param.AdditionalProperties is not null && param.Type == "object")
+        if (param.Type is null || param.Type == "")
         {
-            var dictId = "bool";
-            // if (param.AdditionalProperties.Type == "boolean")
-            // {
-            //     dictId = "bool";
-            //     Console.WriteLine("Dictionary<string, bool>");
-            // } 
-            // // else if (param.AdditionalProperties.Properties is null || param.AdditionalProperties.Properties.Count == 0)
-            // // {
-            // //     Console.WriteLine("Dictionary<string, object>");
-            // // } 
-            // else if (param.AdditionalProperties.Type == "object")
-            // {
-            //     Console.WriteLine("Dictionary<string, ...>");
-            //     dictId = GetTypeRecursive(param.AdditionalProperties);
-            // }
-            // else
-            // {
-            //     throw new UnreachableException($"Illegal dictionary type encountered: {param.AdditionalProperties.Type} {param.AdditionalProperties.Format}");
-            // }
-            dictId = GetTypeRecursive(param.AdditionalProperties);
-            Tab().Append("public ").Required(isReq).Append("Dictionary<string, ").Append(dictId).Append('>')
-                .Nullable(param).Field(field);
-            return;
+            return; // unable to serialize TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
         }
-
-        string? id = ((param.Type ?? string.Empty).ToLowerInvariant(),
-                (param.Format ?? string.Empty).ToLowerInvariant()) switch
-            {
-                (null, _) or ("", _) => null, // TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
-                ("string", var fmt) => GetString(param, fmt),
-                ("integer", "int32") or ("number", "int32") => "int",
-                ("integer", "int64") or ("number", "int64") => "long",
-                ("integer", _) => "int",
-                ("number", "double") => "double",
-                ("number", "float") => "float",
-                ("number", _) => "double",
-                ("boolean", _) or ("bool", _) => "bool",
-                ("array", _) => param.Items is not null
-                    ? GetArray(param)
-                    : FailWith(
-                        $"Unknown Array type {param.Type} {param.Format} for {field}. - Expected Items-schema to exist and describe array items"),
-                ("object", _) => GetObjectId(param),
-                _ => FailWith($"Unknown Param type {param.Type} {param.Format} for {field}"),
-            };
-
-        if (id is null)
-        {
-            return;
-        }
-
-        Tab().Append("public ").Required(isReq).Append(id).Nullable(param).Field(field);
+        
+        string id = GetTypeRecursive(param);
+        
+        Tab().Append("public ").Required(isReq).Append(id).Append(' ').Field(field);
     }
 
     private string GetString(OpenApiSchema openApiSchema, string? lowercaseFormat)
@@ -263,7 +185,6 @@ public class ApiSerializer
             "binary" or "byte" => "byte[]",
             "date" => "DateTime",
             "date-time" => "DateTimeOffset",
-            "email" => "byte[]",
             "uuid" => "Guid",
             "uri" => "Uri",
             _ => "string",
@@ -339,9 +260,9 @@ public class ApiSerializer
         arraySchema.UniqueItems switch
         {
             true => _config.IsReadonly
-                ? $"{Readonly("Set<")}{GetTypeRecursive(arraySchema.Items)}"
-                : $"{Readonly("HashSet<")}{GetTypeRecursive(arraySchema.Items)}",
-            _ => $"{Readonly("List<")}{GetTypeRecursive(arraySchema.Items)}>",
+                ? $"{Readonly("Set")}<{GetTypeRecursive(arraySchema.Items)}>"
+                : $"{Readonly("HashSet")}<{GetTypeRecursive(arraySchema.Items)}>",
+            _ => $"{Readonly("List")}<{GetTypeRecursive(arraySchema.Items)}>",
         };
 
     private string Readonly(string type) => _config.IsReadonly ? $"IReadOnly{type}" : $"{type}";
@@ -349,20 +270,30 @@ public class ApiSerializer
     // resolves List<List<...>>
     private string GetTypeRecursive(OpenApiSchema itemSchema)
     {
+        if (itemSchema.AdditionalProperties is not null && itemSchema.Type == "object")
+        {
+            return $"{Readonly("Dictionary<string, ")}{GetTypeRecursive(itemSchema.AdditionalProperties)}>";
+        }
+
+        itemSchema.Type = itemSchema.Type?.ToLowerInvariant();
+        itemSchema.Format = itemSchema.Format?.ToLowerInvariant();
         var itemId = itemSchema switch
         {
+            // TODO - add enum support here?  - maybe (inline enum?)
             { Type: "object", } => itemSchema.Reference?.Id ?? HandleInlineObject(itemSchema),
-            { Type: "string", } => GetString(itemSchema, (itemSchema.Format ?? "").ToLowerInvariant()),
-            { Type: "integer", Format: "int32" } => "int",
-            { Type: "integer", Format: "int64" } => "long",
+            { Type: "string", } => GetString(itemSchema, itemSchema.Format),
+            { Type: "integer", Format: "int32" } or { Type: "number", Format: "int32" } => "int",
+            { Type: "integer", Format: "int64" } or { Type: "number", Format: "int64" } => "long",
             { Type: "integer", } => "int",
-            { Type: "number", Format: "int32" } => "int",
-            { Type: "number", Format: "int64" } => "long",
             { Type: "number", Format: "double" } => "double",
             { Type: "number", Format: "float" } => "float",
+            { Type: "number", Format: "decimal" } => "decimal",
             { Type: "number", } => "double",
-            { Type: "boolean", } => "bool",
-            { Type: "array", } => $"{Readonly("List<")}{GetTypeRecursive(itemSchema.Items)}>",
+            { Type: "boolean", } or { Type: "bool" } => "bool",
+            { Type: "array", } =>
+                itemSchema.Items is null
+                    ? $"{Readonly("List")}<object?>" // this is not allowed as per spec. But was still enocountered.
+                    : $"{Readonly("List<")}{GetTypeRecursive(itemSchema.Items)}>",
             { Type: null, Format: null } => $"object", // inline object. This fallback seems sane enough.
             _ => throw new UnreachableException($"Unimplemented array type {itemSchema?.Type} {itemSchema?.Format}"),
         };
