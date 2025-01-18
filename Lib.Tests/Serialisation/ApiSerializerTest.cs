@@ -1,6 +1,4 @@
-﻿using System.Net.WebSockets;
-using FluentAssertions;
-using OpenApiToModels.Lib.Serialisation;
+﻿using OpenApiToModels.Lib.Serialisation;
 
 namespace OpenApiToModels.Lib.Tests.Serialisation;
 
@@ -22,10 +20,12 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "RequestBody")], diagnostic, config);
         // Assert
-        str.Should().Contain("/// <summary>");
-        str.Should().Contain("/// The request body summary.");
-        str.Should().Contain("/// Some DateTime filter. Is required.");
-        str.Should().Contain("/// </summary>");
+        StringAssert.Contains("/// <summary>", str);
+        StringAssert.Contains("/// <summary>", str);
+        StringAssert.Contains("/// <summary>", str);
+        StringAssert.Contains("/// The request body summary.", str);
+        StringAssert.Contains("/// Some DateTime filter. Is required.", str);
+        StringAssert.Contains("/// </summary>", str);
     }
     
     [Test]
@@ -37,8 +37,8 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
-        str.Should().Contain("public DateOnly Date { get; set; }");
-        str.Should().Contain("public MyItem MyItem { get; set; }");
+        StringAssert.Contains("public DateOnly Date { get; set; }", str);
+        StringAssert.Contains("public MyItem MyItem { get; set; }", str);
     }
     
     [Test]
@@ -50,13 +50,13 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "DayOfWeek")], diagnostic);
         // Assert
-        str.Should().Contain("public enum DayOfWeek");
-        str.Should().Contain("{");
-        str.Should().Contain("VALUE_0 = 0,");
-        str.Should().Contain("VALUE_1 = 1,");
-        str.Should().Contain("VALUE_2 = 2,");
-        str.Should().Contain("VALUE_6 = 6,");
-        str.Should().Contain("}");
+        StringAssert.Contains("public enum DayOfWeek", str);
+        StringAssert.Contains("{", str);
+        StringAssert.Contains("VALUE_0 = 0,", str);
+        StringAssert.Contains("VALUE_1 = 1,", str);
+        StringAssert.Contains("VALUE_2 = 2,", str);
+        StringAssert.Contains("VALUE_6 = 6,", str);
+        StringAssert.Contains("}", str);
     }
     
     [Test]
@@ -68,11 +68,11 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "MyEnum")], diagnostic);
         // Assert
-        str.Should().Contain("[JsonConverter(typeof(JsonStringEnumConverter))]");
-        str.Should().Contain("public enum MyEnum");
-        str.Should().Contain("VALUE,");
-        str.Should().Contain("NO_VALUE,");
-        str.Should().Contain("MULT_IVALUE,");
+        StringAssert.Contains("[JsonConverter(typeof(JsonStringEnumConverter))]", str);
+        StringAssert.Contains("public enum MyEnum", str);
+        StringAssert.Contains("VALUE,", str);
+        StringAssert.Contains("NO_VALUE,", str);
+        StringAssert.Contains("MULT_IVALUE,", str);
     }
     
     [Test]
@@ -84,8 +84,8 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
-        str.Should().Contain("public string? NullableString { get; set; }");
-        str.Should().Contain("public string NotNullableString { get; set; }");
+        StringAssert.Contains("public string? NullableString { get; set; }", str);
+        StringAssert.Contains("public string NotNullableString { get; set; }", str);
     }
     
     [Test]
@@ -97,8 +97,8 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
-        str.Should().Contain("public required string RequiredString { get; set; }");
-        str.Should().Contain("public required string? RequiredNullableString { get; set; }");
+        StringAssert.Contains("public required string RequiredString { get; set; }", str);
+        StringAssert.Contains("public required string? RequiredNullableString { get; set; }", str);
     }
     
     [Test]
@@ -111,9 +111,9 @@ public class ApiSerializerTest
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
         Console.WriteLine(str);
-        str.Should().Contain("<value>");
-        str.Should().Contain("VALUE, NO_VALUE, MULT_IVALUE");
-        str.Should().Contain("</value>");
+        StringAssert.Contains("<value>", str);
+        StringAssert.Contains("VALUE, NO_VALUE, MULT_IVALUE", str);
+        StringAssert.Contains("</value>", str);
     }
     
     [Test]
@@ -125,10 +125,10 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
         // Assert
-        str.Should().Contain("public List<List<string>>? ListOfLists { get; set; }");
-        str.Should().Contain("public List<List<MyItem>> Items { get; set; }");
-        str.Should().Contain("public required List<MyEnum> Indicators { get; set; }");
-        str.Should().Contain("public MyEnum Indicator { get; set; }");
+        StringAssert.Contains("public List<List<string>>? ListOfLists { get; set; }", str);
+        StringAssert.Contains("public List<List<MyItem>> Items { get; set; }", str);
+        StringAssert.Contains("public required List<MyEnum> Indicators { get; set; }", str);
+        StringAssert.Contains("public MyEnum Indicator { get; set; }", str);
     }
     
     [Test]
@@ -141,8 +141,8 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
         // Assert
-        str.Should().Contain("/// <summary> Date of the entry. </summary>");
-        str.Should().Contain("/// <example> \"2025-01-12\" </example>");
+        StringAssert.Contains("/// <summary> Date of the entry. </summary>", str);
+        StringAssert.Contains("/// <example> \"2025-01-12\" </example>", str);
     }
     
     [Test]
@@ -155,9 +155,9 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
         // Assert
-        str.Should().Contain("[JsonPropertyName(\"indicator\")]");
-        str.Should().Contain("[JsonPropertyName(\"temperatureC\")]");
-        str.Should().Contain("[JsonPropertyName(\"paginationGenericListOfStrings\")]");
+        StringAssert.Contains("[JsonPropertyName(\"indicator\")]", str);
+        StringAssert.Contains("[JsonPropertyName(\"temperatureC\")]", str);
+        StringAssert.Contains("[JsonPropertyName(\"paginationGenericListOfStrings\")]", str);
     }
     
     [Test]
@@ -170,8 +170,8 @@ public class ApiSerializerTest
         // Act
         var str = ApiSerializer.Serialize(schemas, diagnostic, c);
         // Assert
-        str.Should().Contain("public DateTime Date { get; set; }");
-        str.Should().Contain("public required DateTimeOffset DateTime { get; set; }");
+        StringAssert.Contains("public DateTime Date { get; set; }", str);
+        StringAssert.Contains("public required DateTimeOffset DateTime { get; set; }", str);
     }
     
     [Description("Dictionary models used for the dictionary unit tests:")]
@@ -197,14 +197,14 @@ public class ApiSerializerTest
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
         Console.WriteLine(str);
         // Assert
-        str.Should().Contain("public Dictionary<string, bool> A1 { get; set; }");
-        str.Should().Contain("public Dictionary<string, int> A2 { get; set; }");
-        str.Should().Contain("public Dictionary<string, List<int>> A3 { get; set; }");
-        str.Should().Contain("public Dictionary<string, MyEnum> A4 { get; set; }");
-        str.Should().Contain("public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }");
-        str.Should().Contain("public Dictionary<string, MyItem> A6 { get; set; }");
-        // str.Should().Contain("public Dictionary<MyEnum, MyEnum> E1 { get; set; }");
-        // str.Should().Contain("public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }");
+        StringAssert.Contains("public Dictionary<string, bool> A1 { get; set; }", str);
+        StringAssert.Contains("public Dictionary<string, int> A2 { get; set; }", str);
+        StringAssert.Contains("public Dictionary<string, List<int>> A3 { get; set; }", str);
+        StringAssert.Contains("public Dictionary<string, MyEnum> A4 { get; set; }", str);
+        StringAssert.Contains("public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }", str);
+        StringAssert.Contains("public Dictionary<string, MyItem> A6 { get; set; }", str);
+        // StringAssert.Contains("public Dictionary<MyEnum, MyEnum> E1 { get; set; }", str);
+        // StringAssert.Contains("public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }", str);
     }
     
     [Description("https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects")]
@@ -219,8 +219,8 @@ public class ApiSerializerTest
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
         Console.WriteLine(str);
         // Assert
-        str.Should().Contain("public Dictionary<string, object> FreeformObjectType1 { get; set; }");
-        str.Should().Contain("public Dictionary<string, object> FreeformObjectType2 { get; set; }");
+        StringAssert.Contains("public Dictionary<string, object> FreeformObjectType1 { get; set; }", str);
+        StringAssert.Contains("public Dictionary<string, object> FreeformObjectType2 { get; set; }", str);
     }
     
 }

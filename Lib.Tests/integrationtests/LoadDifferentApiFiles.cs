@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 using OpenApiToModels.Lib.OpenApi;
@@ -43,7 +42,7 @@ public class LoadDifferentApiFiles
             .LoadFromApiAsync("https://developer.octopia-io.net/wp-content/uploads/2024/02/Seller_02_12_2024.yaml");
         var schemata = openApiDocument
             .SearchOperationsMatching("categories");
-        schemata.Count().Should().Be(4);
+        Assert.That(schemata.Count(), Is.EqualTo(4));
     }
 
 
@@ -62,8 +61,10 @@ public class LoadDifferentApiFiles
                      - components.requests: {openApiDocument.Components.RequestBodies.Count}
                      - components.responses: {openApiDocument.Components.Responses.Count}
              """);
-        openApiDocument.Paths.Should().NotBeNullOrEmpty();
-        openApiDocument.Components.Schemas.Should().NotBeNullOrEmpty();
+        Assert.IsNotNull(openApiDocument.Paths);
+        Assert.IsNotEmpty(openApiDocument.Paths);
+        Assert.IsNotNull(openApiDocument.Components.Schemas);
+        Assert.IsNotEmpty(openApiDocument.Components.Schemas);
     }
 
     private static void AssertSuccessfulDeserialized(string id, OpenApiDiagnostic diagnostic,
@@ -73,7 +74,7 @@ public class LoadDifferentApiFiles
         var schemata = openApiDocument.Components.Schemas.Select(s => s.Value);
 
         var orderModelsTxt = ApiSerializer.Serialize(schemata, diagnostic);
-        orderModelsTxt.Count().Should().BeGreaterThan(10);
+        Assert.That(orderModelsTxt.Count(), Is.GreaterThan(10));
     }
 
     private IEnumerable<(OpenApiDocument openApiDocument, OpenApiDiagnostic diagnostic, string id)>
