@@ -278,8 +278,7 @@ public class ApiSerializer
         }
         else if (schema.AdditionalPropertiesAllowed && schema.Type == "object" && schema.Reference is null)
         {
-            // special case Free-Form Object: https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects
-            id = Readonly("Dictionary<string, object>");
+            id = Readonly("Dictionary<string, object>"); // special case Free-Form Object: https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects
         }
         else
         {
@@ -290,9 +289,7 @@ public class ApiSerializer
     }
 
     private string MapType(OpenApiSchema schema)
-    {
-        string id;
-        id = schema switch
+        => schema switch
         {
             // TODO - add enum support here?  - maybe (inline enum?)
             { Type: "object", } => schema.Reference?.Id ?? HandleInlineObject(schema),
@@ -312,8 +309,6 @@ public class ApiSerializer
             { Type: null, Format: null } => $"object", // inline object. This fallback seems sane enough.
             _ => throw new UnreachableException($"Unimplemented array type {schema?.Type} {schema?.Format}"),
         };
-        return id;
-    }
 
     private string HandleInlineObject(OpenApiSchema itemSchema)
     {
