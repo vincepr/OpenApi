@@ -3,6 +3,8 @@ name: Deploy Blazor WASM to GitHub Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build-and-test:
@@ -22,6 +24,7 @@ jobs:
   deploy-to-github-pages:
     needs: build-and-test
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: write
     steps:

@@ -157,20 +157,10 @@ public class ApiSerializer
     {
         var field = _config.IsCamelCase ? key.ToTitleCase() : key;
         bool isReq = requiredParams.Contains(key);
-        if (IsEnumAndAbleToBeDereferenced(param))
-        {
-            var schemas = param.Reference.HostDocument?.Components.Schemas;
-            if (schemas is not null && schemas.TryGetValue(param.Reference.Id, out var deReferenced) &&
-                deReferenced.Reference is not null)
-            {
-                Tab().Append("public ").Required(isReq).Class(deReferenced.Reference.Id).Nullable(param)
-                    .Field(field);
-                return;
-            }
-        }
-
+        
         if (param.Type is null || param.Type == "")
         {
+            Errors.Add("Unable to serialize param with no type.");
             return; // unable to serialize TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
         }
 
@@ -214,12 +204,6 @@ public class ApiSerializer
         return param.Enum is not null && param.Enum.Count > 0 &&
                _config.IsEnumAsStringOrInt == false && param.Reference is not null &&
                param.Type is "string" or "number" or "integer" or "object";
-    }
-
-    private string? FailWith(string message)
-    {
-        Errors.Add(message);
-        return null;
     }
 
     private void HandleCloseClass(OpenApiSchema schema)
@@ -279,6 +263,16 @@ public class ApiSerializer
     // resolves List<List<...>>
     private string GetTypeRecursive(OpenApiSchema schema)
     {
+        if (IsEnumAndAbleToBeDereferenced(schema))
+        {
+            var schemas = schema.Reference.HostDocument?.Components.Schemas;
+            if (schemas is not null && schemas.TryGetValue(schema.Reference.Id, out var deReferenced) &&
+                deReferenced.Reference is not null)
+            {
+                return deReferenced.Reference.Id;
+            }
+        }
+        
         schema.Type = schema.Type?.ToLowerInvariant();
         schema.Format = schema.Format?.ToLowerInvariant();
         string id;
