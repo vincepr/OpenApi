@@ -32,11 +32,11 @@ public class ApiSerializer
     /// Build the serialized string to memory.
     /// </summary>
     public string Build() => _str.ToString();
-    
+
     /*
-     * 
+     *
      * Base Class/Enum - Serialization
-     * 
+     *
      */
 
     /// <summary>
@@ -80,7 +80,7 @@ public class ApiSerializer
 
         HandleCloseClass(schema);
     }
-    
+
     private void HandleOpenClass(OpenApiSchema schema)
     {
         Tab().Append(_config.DefaultClassName).Class(schema.Reference.Id).AppendLine();
@@ -114,11 +114,11 @@ public class ApiSerializer
     }
 
     /*
-     * 
+     *
      * Parameter (Fields) - Serialization
      *
      */
-    
+
     private void HandleAllParams(OpenApiSchema schema)
     {
         bool isFirstParam = true;
@@ -143,7 +143,7 @@ public class ApiSerializer
             EncloseInTagsCommented(possibleValues, "<value>", "</value>", isWrappingEnabled: _config.IsWrappingEnabled);
         }
     }
-    
+
     private void HandleJsonPropertyNameTag(KeyValuePair<string, OpenApiSchema> param)
     {
         if (_config.IsJsonPropertyNameTagsEnabled)
@@ -223,7 +223,8 @@ public class ApiSerializer
             //     throw new UnreachableException($"Illegal dictionary type encountered: {param.AdditionalProperties.Type} {param.AdditionalProperties.Format}");
             // }
             dictId = GetTypeRecursive(param.AdditionalProperties);
-            Tab().Append("public ").Required(isReq).Append("Dictionary<string, ").Append(dictId).Append('>').Nullable(param).Field(field);
+            Tab().Append("public ").Required(isReq).Append("Dictionary<string, ").Append(dictId).Append('>')
+                .Nullable(param).Field(field);
             return;
         }
 
@@ -232,8 +233,6 @@ public class ApiSerializer
             {
                 (null, _) or ("", _) => null, // TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
                 ("string", var fmt) => GetString(param, fmt),
-                // ("string", "binary") or ("string", "byte") => "byte[]",
-                // ("string", _) => "string",
                 ("integer", "int32") or ("number", "int32") => "int",
                 ("integer", "int64") or ("number", "int64") => "long",
                 ("integer", _) => "int",
@@ -241,18 +240,19 @@ public class ApiSerializer
                 ("number", "float") => "float",
                 ("number", _) => "double",
                 ("boolean", _) or ("bool", _) => "bool",
-                ("array", _) => param.Items is not null 
-                    ? GetArray(param) 
-                    : FailWith($"Unknown Array type {param.Type} {param.Format} for {field}. - Expected Items-schema to exist and describe array items"),
+                ("array", _) => param.Items is not null
+                    ? GetArray(param)
+                    : FailWith(
+                        $"Unknown Array type {param.Type} {param.Format} for {field}. - Expected Items-schema to exist and describe array items"),
                 ("object", _) => GetObjectId(param),
                 _ => FailWith($"Unknown Param type {param.Type} {param.Format} for {field}"),
-        };
-        
+            };
+
         if (id is null)
         {
             return;
         }
-        
+
         Tab().Append("public ").Required(isReq).Append(id).Nullable(param).Field(field);
     }
 
@@ -267,7 +267,6 @@ public class ApiSerializer
             "uuid" => "Guid",
             "uri" => "Uri",
             _ => "string",
-
         };
     }
 
@@ -276,12 +275,12 @@ public class ApiSerializer
      * Shared helper methods
      *
      */
-    
+
     private bool IsEnumAndAbleToBeDereferenced(OpenApiSchema param)
     {
         // we can try to deref enum. So we can use that real reference-enum here, instead of a string/int field.
         return param.Enum is not null && param.Enum.Count > 0 &&
-               _config.IsEnumAsStringOrInt == false && param.Reference is not null && 
+               _config.IsEnumAsStringOrInt == false && param.Reference is not null &&
                param.Type is "string" or "number" or "integer" or "object";
     }
 
@@ -339,10 +338,9 @@ public class ApiSerializer
     private string GetArray(OpenApiSchema arraySchema) =>
         arraySchema.UniqueItems switch
         {
-            true => 
-                _config.IsReadonly 
-                    ? $"{Readonly("Set<")}{GetTypeRecursive(arraySchema.Items)}" 
-                    : $"{Readonly("HashSet<")}{GetTypeRecursive(arraySchema.Items)}",
+            true => _config.IsReadonly
+                ? $"{Readonly("Set<")}{GetTypeRecursive(arraySchema.Items)}"
+                : $"{Readonly("HashSet<")}{GetTypeRecursive(arraySchema.Items)}",
             _ => $"{Readonly("List<")}{GetTypeRecursive(arraySchema.Items)}>",
         };
 
@@ -354,7 +352,7 @@ public class ApiSerializer
         var itemId = itemSchema switch
         {
             { Type: "object", } => itemSchema.Reference?.Id ?? HandleInlineObject(itemSchema),
-            { Type: "string", } => "string",
+            { Type: "string", } => GetString(itemSchema, (itemSchema.Format ?? "").ToLowerInvariant()),
             { Type: "integer", Format: "int32" } => "int",
             { Type: "integer", Format: "int64" } => "long",
             { Type: "integer", } => "int",

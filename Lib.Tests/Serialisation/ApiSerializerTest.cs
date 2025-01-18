@@ -196,6 +196,13 @@ public class ApiSerializerTest
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
         Console.WriteLine(str);
         // Assert
-        str.Should().Contain("public Dictionary<string, int> DictOfStringToInt { get; set; }");
+        str.Should().Contain("public Dictionary<string, bool> A1 { get; set; }");
+        str.Should().Contain("public Dictionary<string, int> A2 { get; set; }");
+        str.Should().Contain("public Dictionary<string, List<int>> A3 { get; set; }");
+        // str.Should().Contain("public Dictionary<string, MyEnum> A4 { get; set; }");
+        // str.Should().Contain("public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }");
+        str.Should().Contain("public Dictionary<string, MyItem> A6 { get; set; }");
+        // str.Should().Contain("public Dictionary<MyEnum, MyEnum> E1 { get; set; }");
+        // str.Should().Contain("public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }");
     }
 }
