@@ -7,7 +7,7 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <RootNamespace>OpenApiToModels.Lib.Tests</RootNamespace>
+        <RootNamespace>OpenApiToModels.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,7 +19,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Lib\Lib.csproj" />
+      <ProjectReference Include="..\OpenApiToModels\OpenApiToModels.csproj" />
     </ItemGroup>
     
     <!-- Copy over the test files to work for our unit test -->

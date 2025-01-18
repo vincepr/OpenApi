@@ -3,8 +3,8 @@ using BlazorMonaco.Editor;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using Microsoft.OpenApi;
-using OpenApiToModels.Lib.OpenApi;
-using OpenApiToModels.Lib.Serialisation;
+using OpenApiToModels.OpenApi;
+using OpenApiToModels.Serialisation;
 
 namespace BlazorPage.Pages;
 
@@ -45,16 +45,13 @@ public partial class Home
 
     private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
     private MatchingConfig MatchingConfig { get; set; } = new();
-    private bool IsRecord { get; set; } = false;
     private bool IsGenerating { get; set; } = false;
 
     private async Task Generate()
     {
         IsGenerating = true;
         await Task.Delay(1);
-
-        Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-
+        
         try
         {
             var (openApiDocument, diagnostic) = OpenApi.LoadFromText(await _editorLeft.GetValue());

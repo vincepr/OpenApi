@@ -1,23 +1,32 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using OpenApiToModels.Lib.OpenApi;
-using OpenApiToModels.Lib.Serialisation;
+using OpenApiToModels.OpenApi;
+using OpenApiToModels.Serialisation;
 
 // Read V3 as YAML
 var (openApiDocument, diagnostic) = await OpenApi.LoadFromApiAsync(
     // "https://developer.ebay.com/api-docs/master/sell/inventory/openapi/3/sell_inventory_v1_oas3.yaml");
-    // "https://d1y2lf8k3vrkfu.cloudfront.net/openapi/en-us/dest/SponsoredProducts_prod_3p.json");
     "https://developer.octopia-io.net/wp-content/uploads/2024/02/Seller_02_12_2024.yaml");
 
+var matchingSchemata = openApiDocument.SearchSchemataMatching("order").CollectWithDependencies();
 
-    var schemata1 = openApiDocument
-        .SearchOperationsMatching("")
-        .CollectWithDependencies();
+var config = new ApiSerializerConfig
+{
+    Tab = ApiSerializerConfig.TabSymbol.Tab,
+    IsCommentsActive = true,
+    IsExamplesActive = true,
+    IsEnumsInlinedActive = false,
+    IsRecord = true,
+    IsReadonly = false,
+    IsCamelCase = false,
+    IsNoNewlines = false,
+    IsWrappingEnabled = false,
+    MaxChars = 0,
+    IsEnumAsStringOrInt = false,
+    IsJsonPropertyNameTagsEnabled = false
+};
 
-    var schemata2 = openApiDocument.SearchSchemataMatching("").CollectWithDependencies();
-
-
-var orderModelsTxt = ApiSerializer.Serialize(schemata2, diagnostic);
+var orderModelsTxt = ApiSerializer.Serialize(matchingSchemata, diagnostic, config);
 Console.WriteLine(orderModelsTxt);
 
 // var allModelsTxt = ApiSerializer.Serialize(openApiDocument.Components.Schemas.Select(tuple => tuple.Value), diagnostic);

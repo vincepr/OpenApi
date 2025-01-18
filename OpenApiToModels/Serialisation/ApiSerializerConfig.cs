@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace OpenApiToModels.Lib.Serialisation;
+﻿namespace OpenApiToModels.Serialisation;
 
 /// <summary>
 /// Object holding all configuration possibilities for <see cref="ApiSerializer"/>.
@@ -10,13 +8,24 @@ public record ApiSerializerConfig
     /// <summary>
     /// The characters used for indentation. Default is tab or 2 or 4 spaces.
     /// </summary>
-    public TabSymbol Tab { get; set; } = TabSymbol.TwoSpace;
+    public TabSymbol Tab { get; set; } = TabSymbol.Four;
 
     public enum TabSymbol
     {
+        /// <summary>
+        /// Tab sign '\t'.
+        /// </summary>
         Tab,
-        TwoSpace,
-        FourSpace
+        
+        /// <summary>
+        /// Two spaces.
+        /// </summary>
+        Two,
+        
+        /// <summary>
+        /// Four spaces.
+        /// </summary>
+        Four
     }
 
     /// <summary>
@@ -36,9 +45,9 @@ public record ApiSerializerConfig
     public bool IsEnumsInlinedActive { get; set; } = true;
 
     /// <summary>
-    /// class vs record(struct).
+    /// Use record over class.
     /// </summary>
-    public string DefaultClassName { get; set; } = "public record ";
+    public bool IsRecord { get; set; } = false;
 
     /// <summary>
     /// List vs IReadonlyList.
@@ -56,16 +65,6 @@ public record ApiSerializerConfig
     public bool IsNoNewlines { get; set; } = false;
 
     /// <summary>
-    /// Wrap tags to one line, if below the max-character limit.
-    /// </summary>
-    public bool IsWrappingEnabled { get; set; } = false;
-
-    /// <summary>
-    /// Max char length used for tag wrapping. Any overflow above this value will force open and closing on newlines.
-    /// </summary>
-    public uint MaxChars { get; set; } = 120;
-
-    /// <summary>
     /// Use string or int instead of enum Reference.
     /// </summary>
     public bool IsEnumAsStringOrInt { get; set; } = false;
@@ -75,6 +74,15 @@ public record ApiSerializerConfig
     /// </summary>
     /// <example> [JsonPropertyName("fooItems")]. </example>
     public bool IsJsonPropertyNameTagsEnabled { get; set; } = false;
+    /// <summary>
+    /// Wrap tags to one line, if below the max-character limit.
+    /// </summary>
+    public bool IsWrappingEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Max char length used for tag wrapping. Any overflow above this value will force open and closing on newlines.
+    /// </summary>
+    public uint MaxChars { get; set; } = 120;
 }
 
 /// <summary>

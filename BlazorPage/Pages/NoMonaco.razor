@@ -1,10 +1,10 @@
 ﻿@page "/no-monaco"
 
 <PageTitle>No Monaco Editor - just textarea</PageTitle>
-@using OpenApiToModels.Lib.OpenApi
-@using OpenApiToModels.Lib.Serialisation
 @using System.Text
 @using Microsoft.OpenApi
+@using OpenApiToModels.OpenApi
+@using OpenApiToModels.Serialisation
 @inject HttpClient Http
 
 <div class="nav-box dark4">
@@ -45,7 +45,7 @@
             <label>Readonly</label><input class="toggle" type="checkbox" @bind="Config.IsReadonly"/>
         </div>
         <div class="label">
-            <label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
+            <label>Records</label><input class="toggle" type="checkbox" @bind="Config.IsRecord"/>
         </div>
         <div class="label">
             <label>Examples</label><input class="toggle" type="checkbox" @bind="Config.IsExamplesActive"/>
@@ -67,15 +67,12 @@
 @code {
     private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
     private MatchingConfig MatchingConfig { get; set; } = new();
-    private bool IsRecord { get; set; } = true;
 
     private string TextLeft { get; set; } = "";
     private string TextRight { get; set; } = "";
 
-    private async Task Generate()
+    private void Generate()
     {
-        Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-
         var (openApiDocument, diagnostic) = OpenApi.LoadFromText(TextLeft);
         openApiDocument.ResolveReferences();
         var schemata = MatchingConfig.Mode switch

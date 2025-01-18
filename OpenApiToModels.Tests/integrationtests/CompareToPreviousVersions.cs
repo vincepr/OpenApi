@@ -1,6 +1,6 @@
-﻿using OpenApiToModels.Lib.Serialisation;
+﻿using OpenApiToModels.Serialisation;
 
-namespace OpenApiToModels.Lib.Tests.IntegrationTests;
+namespace OpenApiToModels.Tests.integrationtests;
 
 public class CompareToPreviousVersions
 {
@@ -12,11 +12,11 @@ public class CompareToPreviousVersions
             ("default", new()),
             ("inverse", new()
             {
-                Tab = ApiSerializerConfig.TabSymbol.TwoSpace,
+                Tab = ApiSerializerConfig.TabSymbol.Two,
                 IsCommentsActive = true,
                 IsExamplesActive = true,
                 IsEnumsInlinedActive = true,
-                DefaultClassName = "public class ",
+                IsRecord = true,
                 IsReadonly = true,
                 IsCamelCase = false,
                 IsNoNewlines = true,

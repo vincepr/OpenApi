@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Lib\Lib.csproj" />
+      <ProjectReference Include="..\OpenApiToModels\OpenApiToModels.csproj" />
     </ItemGroup>
 
 </Project>

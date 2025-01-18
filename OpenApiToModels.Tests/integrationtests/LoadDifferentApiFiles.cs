@@ -1,9 +1,9 @@
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
-using OpenApiToModels.Lib.OpenApi;
-using OpenApiToModels.Lib.Serialisation;
+using OpenApiToModels.OpenApi;
+using OpenApiToModels.Serialisation;
 
-namespace OpenApiToModels.Lib.Tests.IntegrationTests;
+namespace OpenApiToModels.Tests.integrationtests;
 
 public class LoadDifferentApiFiles
 {

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
 using Microsoft.OpenApi;
@@ -6,7 +5,7 @@ using Microsoft.OpenApi.Extensions;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 
-namespace OpenApiToModels.Lib.OpenApi;
+namespace OpenApiToModels.OpenApi;
 
 public static class OpenApi
 {

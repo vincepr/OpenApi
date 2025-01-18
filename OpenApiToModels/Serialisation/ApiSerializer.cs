@@ -1,10 +1,9 @@
 using System.Diagnostics;
 using System.Text;
-using System.Xml.Schema;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 
-namespace OpenApiToModels.Lib.Serialisation;
+namespace OpenApiToModels.Serialisation;
 
 public class ApiSerializer
 {
@@ -48,7 +47,8 @@ public class ApiSerializer
     {
         if (schema.Reference is null)
         {
-            Errors.Add($"Unable to serialize param with no type. title: {schema.Title} description: {schema.Description}");
+            Errors.Add(
+                $"Unable to serialize param with no type. title: {schema.Title} description: {schema.Description}");
             return;
         }
 
@@ -84,7 +84,7 @@ public class ApiSerializer
 
     private void HandleOpenClass(OpenApiSchema schema)
     {
-        Tab().Append(_config.DefaultClassName).Class(schema.Reference.Id).AppendLine();
+        Tab().Append(_config.IsRecord ? "public record " : "public class").Class(schema.Reference.Id).AppendLine();
         Tab().AppendLine("{");
         _depth++;
     }
@@ -157,10 +157,11 @@ public class ApiSerializer
     {
         var field = _config.IsCamelCase ? key.ToTitleCase() : key;
         bool isReq = requiredParams.Contains(key);
-        
+
         if (param.Type is null || param.Type == "")
         {
-            Errors.Add($"Unable to serialize param with no type. key: {key} title: {param.Title} description: {param.Description}");
+            Errors.Add(
+                $"Unable to serialize param with no type. key: {key} title: {param.Title} description: {param.Description}");
             return; // unable to serialize TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
         }
 
@@ -169,42 +170,11 @@ public class ApiSerializer
         Tab().Append("public ").Required(isReq).Append(id).Append(' ').Field(field);
     }
 
-    private string GetString(OpenApiSchema schema, string? lowercaseFormat)
-    {
-        if(IsEnumAndAbleToBeDereferenced(schema))
-        {
-            var allSchemas = schema.Reference.HostDocument?.Components.Schemas;
-            if (allSchemas is not null && allSchemas.TryGetValue(schema.Reference.Id, out var deReferenced) &&
-                deReferenced.Reference is not null)
-            {
-                return deReferenced.Reference.Id;
-            }
-        }
-        
-        return lowercaseFormat switch
-        {
-            "binary" or "byte" => "byte[]",
-            "date" => "DateTime",
-            "date-time" => "DateTimeOffset",
-            "uuid" => "Guid",
-            "uri" => "Uri",
-            _ => "string",
-        };
-    }
-
     /*
      *
      * Shared helper methods
      *
      */
-
-    private bool IsEnumAndAbleToBeDereferenced(OpenApiSchema param)
-    {
-        // we can try to deref enum. So we can use that real reference-enum here, instead of a string/int field.
-        return param.Enum is not null && param.Enum.Count > 0 &&
-               _config.IsEnumAsStringOrInt == false && param.Reference is not null &&
-               param.Type is "string" or "number" or "integer" or "object";
-    }
 
     private void HandleCloseClass(OpenApiSchema schema)
     {
@@ -272,7 +242,7 @@ public class ApiSerializer
                 return deReferenced.Reference.Id;
             }
         }
-        
+
         schema.Type = schema.Type?.ToLowerInvariant();
         schema.Format = schema.Format?.ToLowerInvariant();
         string id;
@@ -282,7 +252,8 @@ public class ApiSerializer
         }
         else if (schema.AdditionalPropertiesAllowed && schema.Type == "object" && schema.Reference is null)
         {
-            id = Readonly("Dictionary<string, object>"); // special case Free-Form Object: https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects
+            id = Readonly(
+                "Dictionary<string, object>"); // special case Free-Form Object: https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects
         }
         else
         {
@@ -313,6 +284,37 @@ public class ApiSerializer
             { Type: null, Format: null } => $"object", // inline object. This fallback seems sane enough.
             _ => throw new UnreachableException($"Unimplemented array type {schema?.Type} {schema?.Format}"),
         };
+
+    private string GetString(OpenApiSchema schema, string? lowercaseFormat)
+    {
+        if (IsEnumAndAbleToBeDereferenced(schema))
+        {
+            var allSchemas = schema.Reference.HostDocument?.Components.Schemas;
+            if (allSchemas is not null && allSchemas.TryGetValue(schema.Reference.Id, out var deReferenced) &&
+                deReferenced.Reference is not null)
+            {
+                return deReferenced.Reference.Id;
+            }
+        }
+
+        return lowercaseFormat switch
+        {
+            "binary" or "byte" => "byte[]",
+            "date" => "DateTime",
+            "date-time" => "DateTimeOffset",
+            "uuid" => "Guid",
+            "uri" => "Uri",
+            _ => "string",
+        };
+    }
+
+    private bool IsEnumAndAbleToBeDereferenced(OpenApiSchema param)
+    {
+        // we can try to deref enum. So we can use that real reference-enum here, instead of a string/int field.
+        return param.Enum is not null && param.Enum.Count > 0 &&
+               _config.IsEnumAsStringOrInt == false && param.Reference is not null &&
+               param.Type is "string" or "number" or "integer" or "object";
+    }
 
     private string HandleInlineObject(OpenApiSchema itemSchema)
     {

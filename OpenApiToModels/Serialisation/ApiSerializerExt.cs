@@ -1,12 +1,11 @@
-﻿using System.Security.Cryptography;
-using System.Text;
+﻿using System.Text;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 using Microsoft.OpenApi.Writers;
 
-namespace OpenApiToModels.Lib.Serialisation;
+namespace OpenApiToModels.Serialisation;
 
 /// <summary>
 /// Static extension methods for <see cref="ApiSerializer"/> and adjacent functionality.
@@ -16,8 +15,8 @@ internal static class ApiSerializerExt
     public static string AsString(this ApiSerializerConfig.TabSymbol tab) => tab switch
     {
         ApiSerializerConfig.TabSymbol.Tab => "\t",
-        ApiSerializerConfig.TabSymbol.TwoSpace => "  ",
-        ApiSerializerConfig.TabSymbol.FourSpace => "    ",
+        ApiSerializerConfig.TabSymbol.Two => "  ",
+        ApiSerializerConfig.TabSymbol.Four => "    ",
         _ => "    ",
     };
 

@@ -1,10 +1,9 @@
 ﻿@page "/"
 
 <PageTitle>Home</PageTitle>
-@using OpenApiToModels.Lib.OpenApi
-@using OpenApiToModels.Lib.Serialisation
 @using System.Text
 @using Microsoft.OpenApi
+@using OpenApiToModels.Serialisation
 @inject HttpClient Http
 @inject IJSRuntime JsRuntime
 
@@ -16,7 +15,7 @@
         <CheckboxComponent Label="EnumAsString" @bind-Value="Config.IsEnumAsStringOrInt"/>
         <CheckboxComponent Label="WrapTags" @bind-Value="Config.IsWrappingEnabled"/>
         <CheckboxComponent Label="Readonly" @bind-Value="Config.IsReadonly"/>
-        <CheckboxComponent Label="Records" @bind-Value="IsRecord"/>
+        <CheckboxComponent Label="Records" @bind-Value="Config.IsRecord"/>
         <CheckboxComponent Label="NoLines" @bind-Value="Config.IsNoNewlines"/>
         <CheckboxComponent Label="Examples" @bind-Value="Config.IsExamplesActive"/>
         <CheckboxComponent Label="Summary" @bind-Value="Config.IsCommentsActive"/>

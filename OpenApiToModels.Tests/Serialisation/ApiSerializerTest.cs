@@ -1,6 +1,6 @@
-﻿using OpenApiToModels.Lib.Serialisation;
+﻿using OpenApiToModels.Serialisation;
 
-namespace OpenApiToModels.Lib.Tests.Serialisation;
+namespace OpenApiToModels.Tests.Serialisation;
 
 [TestFixture]
 [TestOf(typeof(ApiSerializer))]

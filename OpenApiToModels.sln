@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib", "Lib\Lib.csproj", "{FED1784C-F0CE-4394-A77F-9E2B784A2429}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiToModels", "OpenApiToModels\OpenApiToModels.csproj", "{FED1784C-F0CE-4394-A77F-9E2B784A2429}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{66A6EB07-64C6-49C9-86E9-7316EE65DF5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lib.Tests", "Lib.Tests\Lib.Tests.csproj", "{1A964594-B025-4262-BFCB-AB2BACF1CACC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenApiToModels.Tests", "OpenApiToModels.Tests\OpenApiToModels.Tests.csproj", "{1A964594-B025-4262-BFCB-AB2BACF1CACC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorPage", "BlazorPage\BlazorPage.csproj", "{9ED067B2-1B74-4A47-9E06-725506FF236A}"
 EndProject
