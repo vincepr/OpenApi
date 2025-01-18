@@ -55,8 +55,8 @@ public class ApiSerializer
         if (_isFirstClass) _isFirstClass = false;
         else Tab().AppendLine();
 
-        HandleSummary(schema);
-        HandleExamples(schema);
+        HandleSummaryTags(schema);
+        HandleExamplesTags(schema);
         if (schema.Enum is null || schema.Enum.Count == 0)
         {
             HandleOpenClass(schema);
@@ -127,15 +127,15 @@ public class ApiSerializer
         {
             if (isFirstParam || _config.IsNoNewlines) isFirstParam = false;
             else Tab().AppendLine();
-            HandleSummary(param.Value);
-            HandleExamples(param.Value);
-            HandleInlinedEnum(param.Key, param.Value);
-            HandleJsonPropertyNameTag(param);
+            HandleSummaryTags(param.Value);
+            HandleExamplesTags(param.Value);
+            HandleInlinedEnumTags(param.Key, param.Value);
+            HandleJsonPropertyNameTags(param);
             HandleParam(param.Key, param.Value, schema.Required);
         }
     }
 
-    private void HandleInlinedEnum(string name, OpenApiSchema param)
+    private void HandleInlinedEnumTags(string name, OpenApiSchema param)
     {
         var possibleValues = string.Join(", ",
             param.Enum.Select(e => ApiSerializerExt.SerializeExampleData(e, _openApiDiagnostic).Trim('\"')));
@@ -145,7 +145,7 @@ public class ApiSerializer
         }
     }
 
-    private void HandleJsonPropertyNameTag(KeyValuePair<string, OpenApiSchema> param)
+    private void HandleJsonPropertyNameTags(KeyValuePair<string, OpenApiSchema> param)
     {
         if (_config.IsJsonPropertyNameTagsEnabled)
         {
@@ -179,8 +179,18 @@ public class ApiSerializer
         Tab().Append("public ").Required(isReq).Append(id).Append(' ').Field(field);
     }
 
-    private string GetString(OpenApiSchema openApiSchema, string? lowercaseFormat)
+    private string GetString(OpenApiSchema schema, string? lowercaseFormat)
     {
+        if(IsEnumAndAbleToBeDereferenced(schema))
+        {
+            var allSchemas = schema.Reference.HostDocument?.Components.Schemas;
+            if (allSchemas is not null && allSchemas.TryGetValue(schema.Reference.Id, out var deReferenced) &&
+                deReferenced.Reference is not null)
+            {
+                return deReferenced.Reference.Id;
+            }
+        }
+        
         return lowercaseFormat switch
         {
             "binary" or "byte" => "byte[]",
@@ -218,14 +228,14 @@ public class ApiSerializer
         Tab().AppendLine("}");
     }
 
-    private void HandleSummary(OpenApiSchema schema)
+    private void HandleSummaryTags(OpenApiSchema schema)
     {
         if (_config.IsCommentsActive == false || schema.Description is null) return;
         EncloseInTagsCommented(
             schema.Description, "<summary>", "</summary>", isWrappingEnabled: _config.IsWrappingEnabled);
     }
 
-    private void HandleExamples(OpenApiSchema schema)
+    private void HandleExamplesTags(OpenApiSchema schema)
     {
         if (_config.IsExamplesActive == false || schema.Description is null) return;
         var exampleData = ApiSerializerExt.SerializeExampleData(schema.Example, _openApiDiagnostic);

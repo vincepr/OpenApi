@@ -39,9 +39,10 @@ public class CompareToPreviousVersions
                 var str =
                     ApiSerializer.Serialize(openApiDocument.Components.Schemas.Select(s => s.Value), diagnostic, config.Item2);
                 var oldVersion = File.ReadAllText(path + ".result." + config.ModeName + ".output");
-                Assert.That(oldVersion, Is.EquivalentTo(str));
-                Console.WriteLine($"successfully compared {path} with config: {config.ModeName}");
+                Console.WriteLine($"comparing  {path} with config: {config.ModeName}");
+                Assert.That(oldVersion, Is.EqualTo(str));
             }
         }
+        Console.WriteLine("all equal");
     }
 }

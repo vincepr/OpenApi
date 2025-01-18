@@ -127,7 +127,8 @@ public class ApiSerializerTest
         // Assert
         str.Should().Contain("public List<List<string>>? ListOfLists { get; set; }");
         str.Should().Contain("public List<List<MyItem>> Items { get; set; }");
-        str.Should().Contain("public required List<string> Indicators { get; set; }");
+        str.Should().Contain("public required List<MyEnum> Indicators { get; set; }");
+        str.Should().Contain("public MyEnum Indicator { get; set; }");
     }
     
     [Test]

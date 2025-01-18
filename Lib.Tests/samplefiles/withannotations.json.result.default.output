@@ -48,7 +48,7 @@ public record WeatherResponse
 	
 	public List<List<MyItem>> Items { get; set; }
 	
-	public required List<string> Indicators { get; set; }
+	public required List<MyEnum> Indicators { get; set; }
 	
 	public StringPaginationGeneric PaginationGenericListOfStrings { get; set; }
 	
