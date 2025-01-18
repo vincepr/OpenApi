@@ -159,6 +159,20 @@ public class ApiSerializerTest
         str.Should().Contain("[JsonPropertyName(\"paginationGenericListOfStrings\")]");
     }
     
+    [Test]
+    public void Serialized_DateTimeAndDateTimeOffset_Used()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig();
+        // Act
+        var str = ApiSerializer.Serialize(schemas, diagnostic, c);
+        // Assert
+        str.Should().Contain("public DateTime Date { get; set; }");
+        str.Should().Contain("public required DateTimeOffset DateTime { get; set; }");
+    }
+    
     [Description("Dictionary models used for the dictionary unit tests:")]
     // public class WeatherResponse
     // {
