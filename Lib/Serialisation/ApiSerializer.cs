@@ -48,7 +48,7 @@ public class ApiSerializer
     {
         if (schema.Reference is null)
         {
-            Errors.Add("Reference was null. Unable to serialize without a class name");
+            Errors.Add($"Unable to serialize param with no type. title: {schema.Title} description: {schema.Description}");
             return;
         }
 
@@ -160,7 +160,7 @@ public class ApiSerializer
         
         if (param.Type is null || param.Type == "")
         {
-            Errors.Add("Unable to serialize param with no type.");
+            Errors.Add($"Unable to serialize param with no type. key: {key} title: {param.Title} description: {param.Description}");
             return; // unable to serialize TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
         }
 
