@@ -1,0 +1,61 @@
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MyEnum
+{
+	VALUE,
+	NO_VALUE,
+	MULT_IVALUE,
+}
+
+public record MyItem
+{
+	public required int Id { get; set; }
+	
+	public int? SomeNullableId { get; set; }
+}
+
+public record RequestBody
+{
+	public required DateTimeOffset DateTime { get; set; }
+	
+	/// <value>
+	/// VALUE, NO_VALUE, MULT_IVALUE
+	/// </value>
+	public MyEnum Indicator { get; set; }
+}
+
+public record StringPaginationGeneric
+{
+	public int PageIndex { get; set; }
+	
+	public List<string> Items { get; set; }
+}
+
+public record WeatherResponse
+{
+	public DateTime Date { get; set; }
+	
+	public required int TemperatureC { get; set; }
+	
+	public string? NullableString { get; set; }
+	
+	public string NotNullableString { get; set; }
+	
+	public required string RequiredString { get; set; }
+	
+	public required string? RequiredNullableString { get; set; }
+	
+	public List<List<string>>? ListOfLists { get; set; }
+	
+	public List<List<MyItem>> Items { get; set; }
+	
+	public required List<MyEnum> Indicators { get; set; }
+	
+	public StringPaginationGeneric PaginationGenericListOfStrings { get; set; }
+	
+	public MyItem MyItem { get; set; }
+	
+	/// <value>
+	/// VALUE, NO_VALUE, MULT_IVALUE
+	/// </value>
+	public MyEnum Indicator { get; set; }
+}

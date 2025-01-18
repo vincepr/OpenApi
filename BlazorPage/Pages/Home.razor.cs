@@ -46,7 +46,6 @@ public partial class Home
     private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
     private MatchingConfig MatchingConfig { get; set; } = new();
     private bool IsRecord { get; set; } = false;
-    private bool IsReadonlyList { get; set; } = false;
     private bool IsGenerating { get; set; } = false;
 
     private async Task Generate()
@@ -55,7 +54,6 @@ public partial class Home
         await Task.Delay(1);
 
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-        Config.List = IsReadonlyList ? "IReadOnlyList<" : "List<";
 
         try
         {

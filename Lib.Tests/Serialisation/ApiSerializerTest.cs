@@ -11,6 +11,7 @@ public class ApiSerializerTest
     private const string WeatherJson = "./samplefiles/weathercontroller.json";
     private const string InlineEnumJson = "./samplefiles/inlineenums.json";
     private const string AnnotationsJson = "./samplefiles/withannotations.json";
+    private const string DictionaryYaml = "./samplefiles/dictionary.yaml";
     [Test]
     public void Serialized_SummaryTags()
     {
@@ -25,6 +26,19 @@ public class ApiSerializerTest
         str.Should().Contain("/// The request body summary.");
         str.Should().Contain("/// Some DateTime filter. Is required.");
         str.Should().Contain("/// </summary>");
+    }
+    
+    [Test]
+    public void Serialized_Class()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(WeatherJson));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic);
+        // Assert
+        str.Should().Contain("public DateOnly Date { get; set; }");
+        str.Should().Contain("public MyItem MyItem { get; set; }");
     }
     
     [Test]
@@ -113,7 +127,8 @@ public class ApiSerializerTest
         // Assert
         str.Should().Contain("public List<List<string>>? ListOfLists { get; set; }");
         str.Should().Contain("public List<List<MyItem>> Items { get; set; }");
-        str.Should().Contain("public required List<string> Indicators { get; set; }");
+        str.Should().Contain("public required List<MyEnum> Indicators { get; set; }");
+        str.Should().Contain("public MyEnum Indicator { get; set; }");
     }
     
     [Test]
@@ -139,10 +154,73 @@ public class ApiSerializerTest
         var c = new ApiSerializerConfig() { IsJsonPropertyNameTagsEnabled = true};
         // Act
         var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
-        Console.WriteLine(str);
         // Assert
         str.Should().Contain("[JsonPropertyName(\"indicator\")]");
         str.Should().Contain("[JsonPropertyName(\"temperatureC\")]");
         str.Should().Contain("[JsonPropertyName(\"paginationGenericListOfStrings\")]");
     }
+    
+    [Test]
+    public void Serialized_DateTimeAndDateTimeOffset_Used()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(AnnotationsJson));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig();
+        // Act
+        var str = ApiSerializer.Serialize(schemas, diagnostic, c);
+        // Assert
+        str.Should().Contain("public DateTime Date { get; set; }");
+        str.Should().Contain("public required DateTimeOffset DateTime { get; set; }");
+    }
+    
+    [Description("Dictionary models used for the dictionary unit tests:")]
+    // public class WeatherResponse
+    // {
+    //     public Dictionary<string, bool> A1 { get; set; }
+    //     public Dictionary<string, int> A2 { get; set; }
+    //     public Dictionary<string, List<int>> A3 { get; set; }
+    //     public Dictionary<string, MyEnum> A4 { get; set; }
+    //     public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }
+    //     public Dictionary<string, MyItem> A6 { get; set; }
+    //     public Dictionary<MyEnum, MyEnum> E1 { get; set; }
+    //     public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }
+    // }
+    [Test]
+    public void Serialized_Dictionary()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(DictionaryYaml));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig();
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
+        Console.WriteLine(str);
+        // Assert
+        str.Should().Contain("public Dictionary<string, bool> A1 { get; set; }");
+        str.Should().Contain("public Dictionary<string, int> A2 { get; set; }");
+        str.Should().Contain("public Dictionary<string, List<int>> A3 { get; set; }");
+        str.Should().Contain("public Dictionary<string, MyEnum> A4 { get; set; }");
+        str.Should().Contain("public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }");
+        str.Should().Contain("public Dictionary<string, MyItem> A6 { get; set; }");
+        // str.Should().Contain("public Dictionary<MyEnum, MyEnum> E1 { get; set; }");
+        // str.Should().Contain("public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }");
+    }
+    
+    [Description("https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects")]
+    [Test]
+    public void Serialized_Dictionary_FreeformObjects()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(DictionaryYaml));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig();
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
+        Console.WriteLine(str);
+        // Assert
+        str.Should().Contain("public Dictionary<string, object> FreeformObjectType1 { get; set; }");
+        str.Should().Contain("public Dictionary<string, object> FreeformObjectType2 { get; set; }");
+    }
+    
 }

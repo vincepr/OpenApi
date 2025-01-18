@@ -1,0 +1,72 @@
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MyEnum
+{
+	VALUE,
+	NO_VALUE,
+	MULT_IVALUE,
+}
+
+/// <summary> A Single Element representing some data. </summary>
+public class MyItem
+{
+	/// <summary> A required Id. </summary>
+	/// <example> 12312512 </example>
+	[JsonPropertyName("id")]
+	public required int id { get; set; }
+	/// <summary> This id is nullable. </summary>
+	[JsonPropertyName("someNullableId")]
+	public int? someNullableId { get; set; }
+}
+
+/// <summary> The request body summary. </summary>
+public class RequestBody
+{
+	/// <summary> Some DateTime filter. Is required. </summary>
+	[JsonPropertyName("dateTime")]
+	public required DateTimeOffset dateTime { get; set; }
+	/// <value> VALUE, NO_VALUE, MULT_IVALUE </value>
+	[JsonPropertyName("indicator")]
+	public string indicator { get; set; }
+}
+
+public class StringPaginationGeneric
+{
+	[JsonPropertyName("pageIndex")]
+	public int pageIndex { get; set; }
+	[JsonPropertyName("items")]
+	public IReadOnlyList<string> items { get; set; }
+}
+
+/// <summary> The WeatherForecast element. Represents one day. </summary>
+public class WeatherResponse
+{
+	/// <summary> Date of the entry. </summary>
+	/// <example> "2025-01-12" </example>
+	[JsonPropertyName("date")]
+	public DateTime date { get; set; }
+	/// <summary> Temperature in C. </summary>
+	[JsonPropertyName("temperatureC")]
+	public required int temperatureC { get; set; }
+	[JsonPropertyName("nullableString")]
+	public string? nullableString { get; set; }
+	[JsonPropertyName("notNullableString")]
+	public string notNullableString { get; set; }
+	[JsonPropertyName("requiredString")]
+	public required string requiredString { get; set; }
+	[JsonPropertyName("requiredNullableString")]
+	public required string? requiredNullableString { get; set; }
+	[JsonPropertyName("listOfLists")]
+	public IReadOnlyList<IReadOnlyList<string>>? listOfLists { get; set; }
+	[JsonPropertyName("items")]
+	public IReadOnlyList<IReadOnlyList<MyItem>> items { get; set; }
+	[JsonPropertyName("indicators")]
+	public required IReadOnlyList<string> indicators { get; set; }
+	[JsonPropertyName("paginationGenericListOfStrings")]
+	public StringPaginationGeneric paginationGenericListOfStrings { get; set; }
+	/// <summary> A Single Element representing some data. </summary>
+	[JsonPropertyName("myItem")]
+	public MyItem myItem { get; set; }
+	/// <value> VALUE, NO_VALUE, MULT_IVALUE </value>
+	[JsonPropertyName("indicator")]
+	public string indicator { get; set; }
+}

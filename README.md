@@ -8,8 +8,10 @@ page live at: https://vincepr.github.io/OpenApi/
 - [x] lists - `list<list<list<...>>>`
 - [x] enums - normal enums (own class) - also inlined enums (value tags)
 - [x] readonly for required fields nullable for others
-- [ ] instead of flat models for a path get those with all their dependency classes and their recursive dependencies
-- [ ] AnyOf, OneOf, AllOf - Out of scope. Maybe if dotnet gets union types i might come back to this.
+- [x] instead of flat models for a path get those with all their dependency classes and their recursive dependencies
+- [ ] [AnyOf, OneOf, AllOf](https://swagger.io/docs/specification/v3_0/data-models/oneof-anyof-allof-not/) - Out of scope. Maybe if dotnet gets union types i might come back to this.
+- [ ] [Inheritance and Polymorphism](https://swagger.io/docs/specification/v3_0/data-models/inheritance-and-polymorphism/) 
+- [ ] Default values if provided.
 
 ## Notes
 ### for open api 3.0

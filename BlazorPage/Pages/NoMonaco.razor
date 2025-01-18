@@ -42,7 +42,7 @@
             <label>JsonTags</label><input class="toggle" type="checkbox" @bind="Config.IsJsonPropertyNameTagsEnabled"/>
         </div>
         <div class="label">
-            <label>Readonly</label><input class="toggle" type="checkbox" @bind="IsReadonlyList"/>
+            <label>Readonly</label><input class="toggle" type="checkbox" @bind="Config.IsReadonly"/>
         </div>
         <div class="label">
             <label>Records</label><input class="toggle" type="checkbox" @bind="IsRecord"/>
@@ -68,7 +68,6 @@
     private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
     private MatchingConfig MatchingConfig { get; set; } = new();
     private bool IsRecord { get; set; } = true;
-    private bool IsReadonlyList { get; set; } = false;
 
     private string TextLeft { get; set; } = "";
     private string TextRight { get; set; } = "";
@@ -76,7 +75,6 @@
     private async Task Generate()
     {
         Config.DefaultClassName = IsRecord ? "public record " : "public class ";
-        Config.List = IsReadonlyList ? "IReadOnlyList<" : "List<";
 
         var (openApiDocument, diagnostic) = OpenApi.LoadFromText(TextLeft);
         openApiDocument.ResolveReferences();

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Xml.Schema;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 
@@ -33,6 +34,12 @@ public class ApiSerializer
     /// </summary>
     public string Build() => _str.ToString();
 
+    /*
+     *
+     * Base Class/Enum - Serialization
+     *
+     */
+
     /// <summary>
     /// Add the <see cref="OpenApiSchema"/>, representing a single model/class/enum/..., to the serialization.
     /// </summary>
@@ -41,18 +48,19 @@ public class ApiSerializer
     {
         if (schema.Reference is null)
         {
-            Errors.Add("Reference was null. Unable to serialize without a class name");
+            Errors.Add($"Unable to serialize param with no type. title: {schema.Title} description: {schema.Description}");
             return;
         }
 
         if (_isFirstClass) _isFirstClass = false;
         else Tab().AppendLine();
 
-        HandleSummary(schema);
+        HandleSummaryTags(schema);
+        HandleExamplesTags(schema);
         if (schema.Enum is null || schema.Enum.Count == 0)
         {
             HandleOpenClass(schema);
-            HandleWriteAllParams(schema);
+            HandleAllParams(schema);
         }
         else
         {
@@ -72,6 +80,13 @@ public class ApiSerializer
         }
 
         HandleCloseClass(schema);
+    }
+
+    private void HandleOpenClass(OpenApiSchema schema)
+    {
+        Tab().Append(_config.DefaultClassName).Class(schema.Reference.Id).AppendLine();
+        Tab().AppendLine("{");
+        _depth++;
     }
 
     private void HandleEnum(OpenApiSchema schema)
@@ -99,23 +114,38 @@ public class ApiSerializer
         }
     }
 
-    private void HandleWriteAllParams(OpenApiSchema schema)
+    /*
+     *
+     * Parameter (Fields) - Serialization
+     *
+     */
+
+    private void HandleAllParams(OpenApiSchema schema)
     {
         bool isFirstParam = true;
         foreach (var param in schema.Properties)
         {
             if (isFirstParam || _config.IsNoNewlines) isFirstParam = false;
             else Tab().AppendLine();
-
-            HandleSummary(param.Value);
-            HandleExamples(param.Value);
-            HandleInlinedEnum(param.Key, param.Value);
-            HandleJsonPropertyNameTag(param);
+            HandleSummaryTags(param.Value);
+            HandleExamplesTags(param.Value);
+            HandleInlinedEnumTags(param.Key, param.Value);
+            HandleJsonPropertyNameTags(param);
             HandleParam(param.Key, param.Value, schema.Required);
         }
     }
 
-    private void HandleJsonPropertyNameTag(KeyValuePair<string, OpenApiSchema> param)
+    private void HandleInlinedEnumTags(string name, OpenApiSchema param)
+    {
+        var possibleValues = string.Join(", ",
+            param.Enum.Select(e => ApiSerializerExt.SerializeExampleData(e, _openApiDiagnostic).Trim('\"')));
+        if (_config.IsCommentsActive || _config.IsExamplesActive || _config.IsEnumsInlinedActive)
+        {
+            EncloseInTagsCommented(possibleValues, "<value>", "</value>", isWrappingEnabled: _config.IsWrappingEnabled);
+        }
+    }
+
+    private void HandleJsonPropertyNameTags(KeyValuePair<string, OpenApiSchema> param)
     {
         if (_config.IsJsonPropertyNameTagsEnabled)
         {
@@ -127,107 +157,53 @@ public class ApiSerializer
     {
         var field = _config.IsCamelCase ? key.ToTitleCase() : key;
         bool isReq = requiredParams.Contains(key);
-        if (param.Enum is not null && param.Enum.Count > 0)
+        
+        if (param.Type is null || param.Type == "")
         {
-            // try to deref - if found, we can use that real type here, instead of a string/int for enum values.
-            if (param.Reference is not null && _config.IsEnumAsStringOrInt == false &&
-                param.Type is "string" or "number" or "integer" or "object")
+            Errors.Add($"Unable to serialize param with no type. key: {key} title: {param.Title} description: {param.Description}");
+            return; // unable to serialize TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
+        }
+
+        string id = GetTypeRecursive(param);
+
+        Tab().Append("public ").Required(isReq).Append(id).Append(' ').Field(field);
+    }
+
+    private string GetString(OpenApiSchema schema, string? lowercaseFormat)
+    {
+        if(IsEnumAndAbleToBeDereferenced(schema))
+        {
+            var allSchemas = schema.Reference.HostDocument?.Components.Schemas;
+            if (allSchemas is not null && allSchemas.TryGetValue(schema.Reference.Id, out var deReferenced) &&
+                deReferenced.Reference is not null)
             {
-                var schemas = param.Reference.HostDocument?.Components.Schemas;
-                if (schemas is not null && schemas.TryGetValue(param.Reference.Id, out var deReferenced) &&
-                    deReferenced.Reference is not null)
-                {
-                    Tab().Append("public ").Required(isReq).Class(deReferenced.Reference.Id).Nullable(param).Field(field);
-                    return;
-                }
+                return deReferenced.Reference.Id;
             }
         }
-
-
-        // TODO: clean this up - switch expression with just all repeating Tab()... drawn out.
-        switch (((param.Type ?? string.Empty).ToLowerInvariant(), (param.Format ?? string.Empty).ToLowerInvariant()))
+        
+        return lowercaseFormat switch
         {
-            case (null, _) or ("", _):
-                return; // TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
-            case ("string", _):
-                Tab().Append("public ").Required(isReq).Append("string").Nullable(param).Field(field);
-                break;
-            case ("integer", "int32") or ("number", "int32"):
-                Tab().Append("public ").Required(isReq).Append("int").Nullable(param).Field(field);
-                break;
-            case ("integer", "int64") or ("number", "int64"):
-                Tab().Append("public ").Required(isReq).Append("long").Nullable(param).Field(field);
-                break;
-            case ("integer", _):
-                Tab().Append("public ").Required(isReq).Append("int").Nullable(param).Field(field);
-                if (param.Format is not null)
-                {
-                    Errors.Add($"Unknown Param type {param.Type} {param.Format} for {field}");
-                    throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
-                }
-
-                break;
-            case ("number", "double"):
-                Tab().Append("public ").Required(isReq).Append("double").Nullable(param).Field(field);
-                break;
-            case ("number", "float"):
-                Tab().Append("public ").Required(isReq).Append("float").Nullable(param).Field(field);
-                break;
-            case ("number", _):
-                Tab().Append("public ").Required(isReq).Append("double").Nullable(param).Field(field);
-                if (param.Format is not null)
-                {
-                    Errors.Add($"Unknown Param type {param.Type} {param.Format} for {field}");
-                    throw new NotImplementedException($"{param.Type} {param.Format}"); // TODO: remove after testing
-                }
-
-                break;
-            case ("boolean", _):
-                Tab().Append("public ").Required(isReq).Append("bool").Nullable(param).Field(field);
-                break;
-            case ("array", _):
-                if (param.Items is null)
-                {
-                    Errors.Add(
-                        $"Unknown Array type {param.Type} {param.Format} for {field}. - Expected Items-schema to exist and describe array items");
-                    return;
-                }
-
-                HandleArray(field, param, isArrayRequired: isReq);
-                break;
-            case ("object", _):
-                HandleObject(field, param, isRequired: isReq);
-                break;
-            default:
-                // TODO: handle AllOf | OneOf |AnyOf (eg for enums)
-                Errors.Add($"Unknown Param type {param.Type} {param.Format} for {field}");
-                throw new NotImplementedException(
-                    $"Unknown Param type {param.Type} {param.Format} for {field}"); // TODO: remove after testing
-                break;
-        }
+            "binary" or "byte" => "byte[]",
+            "date" => "DateTime",
+            "date-time" => "DateTimeOffset",
+            "uuid" => "Guid",
+            "uri" => "Uri",
+            _ => "string",
+        };
     }
 
-    private void HandleInlinedEnum(string name, OpenApiSchema param)
-    {
-        var possibleValues = string.Join(", ",
-            param.Enum.Select(e => ApiSerializerExt.SerializeExampleData(e, _openApiDiagnostic).Trim('\"')));
-        if (_config.IsCommentsActive || _config.IsExamplesActive || _config.IsEnumsInlinedActive)
-        {
-            EncloseInTagsCommented(possibleValues, "<value>", "</value>", isWrappingEnabled: _config.IsWrappingEnabled);
-        }
-    }
+    /*
+     *
+     * Shared helper methods
+     *
+     */
 
-    private void HandleObject(string fieldName, OpenApiSchema schema, bool isRequired)
+    private bool IsEnumAndAbleToBeDereferenced(OpenApiSchema param)
     {
-        var objName = schema.Reference?.Id ?? HandleInlineObject(schema);
-        Tab().Append("public ").Required(isRequired).Class(objName).Nullable(schema).Field(fieldName);
-    }
-
-    private void HandleOpenClass(OpenApiSchema schema)
-    {
-        Tab().Append(_config.DefaultClassName).Class(schema.Reference.Id).AppendLine();
-        Tab().AppendLine("{");
-        _depth++;
+        // we can try to deref enum. So we can use that real reference-enum here, instead of a string/int field.
+        return param.Enum is not null && param.Enum.Count > 0 &&
+               _config.IsEnumAsStringOrInt == false && param.Reference is not null &&
+               param.Type is "string" or "number" or "integer" or "object";
     }
 
     private void HandleCloseClass(OpenApiSchema schema)
@@ -236,14 +212,14 @@ public class ApiSerializer
         Tab().AppendLine("}");
     }
 
-    private void HandleSummary(OpenApiSchema schema)
+    private void HandleSummaryTags(OpenApiSchema schema)
     {
         if (_config.IsCommentsActive == false || schema.Description is null) return;
         EncloseInTagsCommented(
             schema.Description, "<summary>", "</summary>", isWrappingEnabled: _config.IsWrappingEnabled);
     }
 
-    private void HandleExamples(OpenApiSchema schema)
+    private void HandleExamplesTags(OpenApiSchema schema)
     {
         if (_config.IsExamplesActive == false || schema.Description is null) return;
         var exampleData = ApiSerializerExt.SerializeExampleData(schema.Example, _openApiDiagnostic);
@@ -273,36 +249,70 @@ public class ApiSerializer
         Tab().Append("/// ").AppendLine(endTag);
     }
 
-    private void HandleArray(string fieldName, OpenApiSchema arraySchema, bool isArrayRequired)
+    private string GetArray(OpenApiSchema arraySchema) =>
+        arraySchema.UniqueItems switch
+        {
+            true => _config.IsReadonly
+                ? $"{Readonly("Set")}<{GetTypeRecursive(arraySchema.Items)}>"
+                : $"{Readonly("HashSet")}<{GetTypeRecursive(arraySchema.Items)}>",
+            _ => $"{Readonly("List")}<{GetTypeRecursive(arraySchema.Items)}>",
+        };
+
+    private string Readonly(string type) => _config.IsReadonly ? $"IReadOnly{type}" : $"{type}";
+
+    // resolves List<List<...>>
+    private string GetTypeRecursive(OpenApiSchema schema)
     {
-        var itemId = GetListedTypeRecursive(arraySchema);
-        Tab().Append("public ").Required(isArrayRequired).Append(_config.List).Class(itemId)
-            .Nullable(arraySchema).Field(fieldName);
+        if (IsEnumAndAbleToBeDereferenced(schema))
+        {
+            var schemas = schema.Reference.HostDocument?.Components.Schemas;
+            if (schemas is not null && schemas.TryGetValue(schema.Reference.Id, out var deReferenced) &&
+                deReferenced.Reference is not null)
+            {
+                return deReferenced.Reference.Id;
+            }
+        }
+        
+        schema.Type = schema.Type?.ToLowerInvariant();
+        schema.Format = schema.Format?.ToLowerInvariant();
+        string id;
+        if (schema.AdditionalProperties is not null && schema.Type == "object")
+        {
+            id = $"{Readonly("Dictionary<string, ")}{GetTypeRecursive(schema.AdditionalProperties)}>";
+        }
+        else if (schema.AdditionalPropertiesAllowed && schema.Type == "object" && schema.Reference is null)
+        {
+            id = Readonly("Dictionary<string, object>"); // special case Free-Form Object: https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects
+        }
+        else
+        {
+            id = MapType(schema);
+        }
+
+        return schema.Nullable ? id + "?" : id;
     }
 
-    private string GetListedTypeRecursive(OpenApiSchema arraySchema)
-    {
-        var itemSchema = arraySchema.Items;
-        var itemId = "object";
-        itemId = itemSchema switch
+    private string MapType(OpenApiSchema schema)
+        => schema switch
         {
-            { Type: "object", } => itemSchema.Reference?.Id ?? HandleInlineObject(itemSchema),
-            { Type: "string", } => "string",
-            { Type: "integer", Format: "int32" } => "int",
-            { Type: "integer", Format: "int64" } => "long",
+            // TODO - add enum support here?  - maybe (inline enum?)
+            { Type: "object", } => schema.Reference?.Id ?? HandleInlineObject(schema),
+            { Type: "string", } => GetString(schema, schema.Format),
+            { Type: "integer", Format: "int32" } or { Type: "number", Format: "int32" } => "int",
+            { Type: "integer", Format: "int64" } or { Type: "number", Format: "int64" } => "long",
             { Type: "integer", } => "int",
-            { Type: "number", Format: "int32" } => "int",
-            { Type: "number", Format: "int64" } => "long",
             { Type: "number", Format: "double" } => "double",
             { Type: "number", Format: "float" } => "float",
+            { Type: "number", Format: "decimal" } => "decimal",
             { Type: "number", } => "double",
-            { Type: "boolean", } => "bool",
-            { Type: "array", } => $"{_config.List}{GetListedTypeRecursive(itemSchema)}",
+            { Type: "boolean", } or { Type: "bool" } => "bool",
+            { Type: "array", } =>
+                schema.Items is null
+                    ? $"{Readonly("List")}<object?>" // this is not allowed as per spec. But was still enocountered.
+                    : GetArray(schema),
             { Type: null, Format: null } => $"object", // inline object. This fallback seems sane enough.
-            _ => throw new UnreachableException($"Unimplemented array type {itemSchema.Type} {itemSchema.Format}"),
+            _ => throw new UnreachableException($"Unimplemented array type {schema?.Type} {schema?.Format}"),
         };
-        return itemId + (itemSchema.Nullable ? "?>" : ">");
-    }
 
     private string HandleInlineObject(OpenApiSchema itemSchema)
     {
@@ -311,6 +321,10 @@ public class ApiSerializer
         return id;
     }
 
+    /// <summary>
+    /// Use <see cref="ApiSerializer"/> to serialize the selected schemata to csharp code/models.
+    /// </summary>
+    /// <remarks>Errors are logged to the error console.</remarks>
     public static string Serialize(
         IEnumerable<OpenApiSchema> schemata, OpenApiDiagnostic? diagnostic, ApiSerializerConfig? config = default)
     {

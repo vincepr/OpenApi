@@ -80,7 +80,7 @@ public class LoadDifferentApiFiles
         SetupDocumentsFromFiles()
     {
         Console.WriteLine($"Found {Directory.GetFiles("./samplefiles").Length} OpenApiFiles to test");
-        foreach (var file in Directory.GetFiles("./samplefiles"))
+        foreach (var file in Directory.GetFiles("./samplefiles").Where(path => path.Contains("result") == false))
         {
             var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(file));
             yield return (openApiDocument, diagnostic, file);

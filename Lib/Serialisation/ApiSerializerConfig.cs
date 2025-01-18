@@ -43,7 +43,7 @@ public record ApiSerializerConfig
     /// <summary>
     /// List vs IReadonlyList.
     /// </summary>
-    public string List { get; set; } = "List<";
+    public bool IsReadonly { get; set; } = false;
 
     /// <summary>
     /// Capital first letter or leave all property names untouched.
