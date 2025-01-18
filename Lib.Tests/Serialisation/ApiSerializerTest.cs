@@ -174,18 +174,6 @@ public class ApiSerializerTest
         StringAssert.Contains("public required DateTimeOffset DateTime { get; set; }", str);
     }
     
-    [Description("Dictionary models used for the dictionary unit tests:")]
-    // public class WeatherResponse
-    // {
-    //     public Dictionary<string, bool> A1 { get; set; }
-    //     public Dictionary<string, int> A2 { get; set; }
-    //     public Dictionary<string, List<int>> A3 { get; set; }
-    //     public Dictionary<string, MyEnum> A4 { get; set; }
-    //     public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }
-    //     public Dictionary<string, MyItem> A6 { get; set; }
-    //     public Dictionary<MyEnum, MyEnum> E1 { get; set; }
-    //     public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }
-    // }
     [Test]
     public void Serialized_Dictionary()
     {
@@ -203,8 +191,6 @@ public class ApiSerializerTest
         StringAssert.Contains("public Dictionary<string, MyEnum> A4 { get; set; }", str);
         StringAssert.Contains("public List<Dictionary<string, Dictionary<string, string>>> A5 { get; set; }", str);
         StringAssert.Contains("public Dictionary<string, MyItem> A6 { get; set; }", str);
-        // StringAssert.Contains("public Dictionary<MyEnum, MyEnum> E1 { get; set; }", str);
-        // StringAssert.Contains("public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }", str);
     }
     
     [Description("https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects")]

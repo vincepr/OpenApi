@@ -114,31 +114,5 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/MyItem'
-        e1:
-          type: object
-          properties:
-            VALUE:
-              $ref: '#/components/schemas/MyEnum'
-            NO_VALUE:
-              $ref: '#/components/schemas/MyEnum'
-            MULT_IVALUE:
-              $ref: '#/components/schemas/MyEnum'
-          additionalProperties: false
-        e2:
-          type: object
-          properties:
-            VALUE:
-              type: array
-              items:
-                $ref: '#/components/schemas/MyEnum'
-            NO_VALUE:
-              type: array
-              items:
-                $ref: '#/components/schemas/MyEnum'
-            MULT_IVALUE:
-              type: array
-              items:
-                $ref: '#/components/schemas/MyEnum'
-          additionalProperties: false
       additionalProperties: false
       description: The WeatherForecast element. Represents one day.
