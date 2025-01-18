@@ -15,6 +15,25 @@ public class DateOnly
 	public int dayNumber { get; set; }
 }
 
+public enum DayOfWeek
+{
+	VALUE_0 = 0,
+	VALUE_1 = 1,
+	VALUE_2 = 2,
+	VALUE_3 = 3,
+	VALUE_4 = 4,
+	VALUE_5 = 5,
+	VALUE_6 = 6,
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum MyEnum
+{
+	VALUE,
+	NO_VALUE,
+	MULT_IVALUE,
+}
+
 /// <summary> A Single Element representing some data. </summary>
 public class MyItem
 {
@@ -32,11 +51,10 @@ public class RequestBody
 {
 	/// <summary> Some DateTime filter. Is required. </summary>
 	[JsonPropertyName("dateTime")]
-	public string dateTime { get; set; }
-	/// <summary> The nullable enum. </summary>
+	public DateTimeOffset dateTime { get; set; }
 	/// <value> VALUE, NO_VALUE, MULT_IVALUE </value>
 	[JsonPropertyName("indicator")]
-	public string? indicator { get; set; }
+	public string indicator { get; set; }
 }
 
 /// <summary> The WeatherForecast element. Represents one day. </summary>
@@ -56,9 +74,9 @@ public class WeatherResponse
 	[JsonPropertyName("requiredNullableString")]
 	public string? requiredNullableString { get; set; }
 	[JsonPropertyName("ids")]
-	public IReadonlyList<string> ids { get; set; }
+	public IReadOnlyList<string> ids { get; set; }
 	[JsonPropertyName("items")]
-	public IReadonlyList<MyItem> items { get; set; }
+	public IReadOnlyList<MyItem> items { get; set; }
 	/// <summary> A Single Element representing some data. </summary>
 	[JsonPropertyName("myItem")]
 	public MyItem myItem { get; set; }
@@ -66,5 +84,5 @@ public class WeatherResponse
 	[JsonPropertyName("indicator")]
 	public string indicator { get; set; }
 	[JsonPropertyName("indicators")]
-	public IReadonlyList<string> indicators { get; set; }
+	public IReadOnlyList<string> indicators { get; set; }
 }

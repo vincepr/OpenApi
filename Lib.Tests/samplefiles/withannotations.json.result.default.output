@@ -15,7 +15,7 @@ public record MyItem
 
 public record RequestBody
 {
-	public required string DateTime { get; set; }
+	public required DateTimeOffset DateTime { get; set; }
 	
 	/// <value>
 	/// VALUE, NO_VALUE, MULT_IVALUE
@@ -32,7 +32,7 @@ public record StringPaginationGeneric
 
 public record WeatherResponse
 {
-	public string Date { get; set; }
+	public DateTime Date { get; set; }
 	
 	public required int TemperatureC { get; set; }
 	

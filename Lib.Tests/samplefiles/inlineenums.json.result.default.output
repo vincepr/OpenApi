@@ -9,30 +9,11 @@ public record DateOnly
 	/// <value>
 	/// 0, 1, 2, 3, 4, 5, 6
 	/// </value>
-	public DayOfWeek DayOfWeek { get; set; }
+	public int DayOfWeek { get; set; }
 	
 	public int DayOfYear { get; set; }
 	
 	public int DayNumber { get; set; }
-}
-
-public enum DayOfWeek
-{
-	VALUE_0 = 0,
-	VALUE_1 = 1,
-	VALUE_2 = 2,
-	VALUE_3 = 3,
-	VALUE_4 = 4,
-	VALUE_5 = 5,
-	VALUE_6 = 6,
-}
-
-[JsonConverter(typeof(JsonStringEnumConverter))]
-public enum MyEnum
-{
-	VALUE,
-	NO_VALUE,
-	MULT_IVALUE,
 }
 
 public record MyItem
@@ -44,12 +25,12 @@ public record MyItem
 
 public record RequestBody
 {
-	public string DateTime { get; set; }
+	public DateTimeOffset DateTime { get; set; }
 	
 	/// <value>
 	/// VALUE, NO_VALUE, MULT_IVALUE
 	/// </value>
-	public MyEnum Indicator { get; set; }
+	public string? Indicator { get; set; }
 }
 
 public record WeatherResponse
@@ -75,7 +56,7 @@ public record WeatherResponse
 	/// <value>
 	/// VALUE, NO_VALUE, MULT_IVALUE
 	/// </value>
-	public MyEnum Indicator { get; set; }
+	public string Indicator { get; set; }
 	
 	public List<string> Indicators { get; set; }
 }

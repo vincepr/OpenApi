@@ -38,7 +38,7 @@ public class CompareToPreviousVersions
                 var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(path));
                 var str =
                     ApiSerializer.Serialize(openApiDocument.Components.Schemas.Select(s => s.Value), diagnostic, config.Item2);
-                var oldVersion = File.ReadAllText(path + ".result." + config.ModeName + ".json");
+                var oldVersion = File.ReadAllText(path + ".result." + config.ModeName + ".output");
                 Assert.That(oldVersion, Is.EquivalentTo(str));
                 Console.WriteLine($"successfully compared {path} with config: {config.ModeName}");
             }

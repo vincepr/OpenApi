@@ -346,7 +346,7 @@ public class ApiSerializer
             _ => $"{Readonly("List<")}{GetTypeRecursive(arraySchema.Items)}>",
         };
 
-    private string Readonly(string type) => _config.IsReadonly ? "IReadOnly" : "" + $"{type}";
+    private string Readonly(string type) => _config.IsReadonly ? $"IReadOnly{type}" : $"{type}";
 
     // resolves List<List<...>>
     private string GetTypeRecursive(OpenApiSchema itemSchema)

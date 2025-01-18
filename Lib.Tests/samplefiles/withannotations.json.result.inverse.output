@@ -23,7 +23,7 @@ public class RequestBody
 {
 	/// <summary> Some DateTime filter. Is required. </summary>
 	[JsonPropertyName("dateTime")]
-	public required string dateTime { get; set; }
+	public required DateTimeOffset dateTime { get; set; }
 	/// <value> VALUE, NO_VALUE, MULT_IVALUE </value>
 	[JsonPropertyName("indicator")]
 	public string indicator { get; set; }
@@ -34,7 +34,7 @@ public class StringPaginationGeneric
 	[JsonPropertyName("pageIndex")]
 	public int pageIndex { get; set; }
 	[JsonPropertyName("items")]
-	public IReadonlyList<string> items { get; set; }
+	public IReadOnlyList<string> items { get; set; }
 }
 
 /// <summary> The WeatherForecast element. Represents one day. </summary>
@@ -43,7 +43,7 @@ public class WeatherResponse
 	/// <summary> Date of the entry. </summary>
 	/// <example> "2025-01-12" </example>
 	[JsonPropertyName("date")]
-	public string date { get; set; }
+	public DateTime date { get; set; }
 	/// <summary> Temperature in C. </summary>
 	[JsonPropertyName("temperatureC")]
 	public required int temperatureC { get; set; }
@@ -56,11 +56,11 @@ public class WeatherResponse
 	[JsonPropertyName("requiredNullableString")]
 	public required string? requiredNullableString { get; set; }
 	[JsonPropertyName("listOfLists")]
-	public IReadonlyList<IReadonlyList<string>>? listOfLists { get; set; }
+	public IReadOnlyList<IReadOnlyList<string>>? listOfLists { get; set; }
 	[JsonPropertyName("items")]
-	public IReadonlyList<IReadonlyList<MyItem>> items { get; set; }
+	public IReadOnlyList<IReadOnlyList<MyItem>> items { get; set; }
 	[JsonPropertyName("indicators")]
-	public required IReadonlyList<string> indicators { get; set; }
+	public required IReadOnlyList<string> indicators { get; set; }
 	[JsonPropertyName("paginationGenericListOfStrings")]
 	public StringPaginationGeneric paginationGenericListOfStrings { get; set; }
 	/// <summary> A Single Element representing some data. </summary>
