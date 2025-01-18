@@ -76,6 +76,12 @@ components:
     WeatherResponse:
       type: object
       properties:
+        freeformObjectType1:
+          type: object
+          additionalProperties: true
+        freeformObjectType2:
+          type: object
+          additionalProperties: {}
         a1:
           type: object
           additionalProperties:

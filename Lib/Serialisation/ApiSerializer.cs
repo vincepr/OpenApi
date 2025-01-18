@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Xml.Schema;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 
@@ -172,9 +173,9 @@ public class ApiSerializer
         {
             return; // unable to serialize TODO: currently we serialize summary and examples, if we skipp here. Stop doing that. 
         }
-        
+
         string id = GetTypeRecursive(param);
-        
+
         Tab().Append("public ").Required(isReq).Append(id).Append(' ').Field(field);
     }
 
@@ -210,8 +211,6 @@ public class ApiSerializer
         Errors.Add(message);
         return null;
     }
-
-    private string GetObjectId(OpenApiSchema schema) => GetTypeRecursive(schema);
 
     private void HandleCloseClass(OpenApiSchema schema)
     {
@@ -268,20 +267,36 @@ public class ApiSerializer
     private string Readonly(string type) => _config.IsReadonly ? $"IReadOnly{type}" : $"{type}";
 
     // resolves List<List<...>>
-    private string GetTypeRecursive(OpenApiSchema itemSchema)
+    private string GetTypeRecursive(OpenApiSchema schema)
     {
-        if (itemSchema.AdditionalProperties is not null && itemSchema.Type == "object")
+        schema.Type = schema.Type?.ToLowerInvariant();
+        schema.Format = schema.Format?.ToLowerInvariant();
+        string id;
+        if (schema.AdditionalProperties is not null && schema.Type == "object")
         {
-            return $"{Readonly("Dictionary<string, ")}{GetTypeRecursive(itemSchema.AdditionalProperties)}>";
+            id = $"{Readonly("Dictionary<string, ")}{GetTypeRecursive(schema.AdditionalProperties)}>";
+        }
+        else if (schema.AdditionalPropertiesAllowed && schema.Type == "object" && schema.Reference is null)
+        {
+            // special case Free-Form Object: https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects
+            id = Readonly("Dictionary<string, object>");
+        }
+        else
+        {
+            id = MapType(schema);
         }
 
-        itemSchema.Type = itemSchema.Type?.ToLowerInvariant();
-        itemSchema.Format = itemSchema.Format?.ToLowerInvariant();
-        var itemId = itemSchema switch
+        return schema.Nullable ? id + "?" : id;
+    }
+
+    private string MapType(OpenApiSchema schema)
+    {
+        string id;
+        id = schema switch
         {
             // TODO - add enum support here?  - maybe (inline enum?)
-            { Type: "object", } => itemSchema.Reference?.Id ?? HandleInlineObject(itemSchema),
-            { Type: "string", } => GetString(itemSchema, itemSchema.Format),
+            { Type: "object", } => schema.Reference?.Id ?? HandleInlineObject(schema),
+            { Type: "string", } => GetString(schema, schema.Format),
             { Type: "integer", Format: "int32" } or { Type: "number", Format: "int32" } => "int",
             { Type: "integer", Format: "int64" } or { Type: "number", Format: "int64" } => "long",
             { Type: "integer", } => "int",
@@ -291,13 +306,13 @@ public class ApiSerializer
             { Type: "number", } => "double",
             { Type: "boolean", } or { Type: "bool" } => "bool",
             { Type: "array", } =>
-                itemSchema.Items is null
+                schema.Items is null
                     ? $"{Readonly("List")}<object?>" // this is not allowed as per spec. But was still enocountered.
-                    : $"{Readonly("List<")}{GetTypeRecursive(itemSchema.Items)}>",
+                    : GetArray(schema),
             { Type: null, Format: null } => $"object", // inline object. This fallback seems sane enough.
-            _ => throw new UnreachableException($"Unimplemented array type {itemSchema?.Type} {itemSchema?.Format}"),
+            _ => throw new UnreachableException($"Unimplemented array type {schema?.Type} {schema?.Format}"),
         };
-        return itemSchema.Nullable ? itemId + "?" : itemId;
+        return id;
     }
 
     private string HandleInlineObject(OpenApiSchema itemSchema)

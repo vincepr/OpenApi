@@ -205,4 +205,21 @@ public class ApiSerializerTest
         // str.Should().Contain("public Dictionary<MyEnum, MyEnum> E1 { get; set; }");
         // str.Should().Contain("public Dictionary<MyEnum, List<MyEnum>> E2 { get; set; }");
     }
+    
+    [Description("https://swagger.io/docs/specification/v3_0/data-models/dictionaries/#free-form-objects")]
+    [Test]
+    public void Serialized_Dictionary_FreeformObjects()
+    {
+        // Arrange
+        var (openApiDocument, diagnostic) = OpenApi.OpenApi.LoadFromText(File.ReadAllText(DictionaryYaml));
+        var schemas = openApiDocument.Components.Schemas.Select(t => t.Value);
+        var c = new ApiSerializerConfig();
+        // Act
+        var str = ApiSerializer.Serialize([schemas.Single(s => s.Reference.Id == "WeatherResponse")], diagnostic, c);
+        Console.WriteLine(str);
+        // Assert
+        str.Should().Contain("public Dictionary<string, object> FreeformObjectType1 { get; set; }");
+        str.Should().Contain("public Dictionary<string, object> FreeformObjectType2 { get; set; }");
+    }
+    
 }
