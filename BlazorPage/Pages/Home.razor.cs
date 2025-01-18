@@ -43,7 +43,7 @@ public partial class Home
         return options;
     }
 
-    private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true };
+    private ApiSerializerConfig Config { get; set; } = new() { IsNoNewlines = true, IsRecord = false };
     private MatchingConfig MatchingConfig { get; set; } = new();
     private bool IsGenerating { get; set; } = false;
 
