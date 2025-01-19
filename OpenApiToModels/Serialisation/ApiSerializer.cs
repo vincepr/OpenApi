@@ -336,4 +336,12 @@ public class ApiSerializer
         foreach (var error in serializer.Errors) Console.Error.WriteLine(error);
         return serializer.Build();
     }
+    
+    public static (string Text, IReadOnlyList<string> Errors) SerializeWithErrors(
+        IEnumerable<OpenApiSchema> schemata, OpenApiDiagnostic? diagnostic, ApiSerializerConfig? config = default)
+    {
+        var serializer = new ApiSerializer(config, diagnostic);
+        foreach (var schema in schemata) serializer.Add(schema);
+        return (serializer.Build(), serializer.Errors);
+    }
 }

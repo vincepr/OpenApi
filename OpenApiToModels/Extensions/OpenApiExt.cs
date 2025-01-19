@@ -77,6 +77,11 @@ public static class OpenApiExt
         {
             return false;
         }
+        
+        if (schema.AdditionalProperties?.Reference != null)
+        {
+            set.AddRecursive(schema.AdditionalProperties);
+        }
 
         foreach (var property in schema.Properties)
         {
