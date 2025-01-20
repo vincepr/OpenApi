@@ -5,7 +5,7 @@
 /// </summary>
 public record MatchingConfig
 {
-    public MatchMode Mode { get; set; } = MatchMode.Path;
+    public MatchMode Mode { get; set; } = MatchMode.All;
     
     public string Matcher { get; set; } = "";
 

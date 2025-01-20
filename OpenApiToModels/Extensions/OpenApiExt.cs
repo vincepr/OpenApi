@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Text;
 using Microsoft.OpenApi;
@@ -45,12 +46,12 @@ public static class OpenApiExt
         {
             if (path.Value.UnresolvedReference)
             {
-                throw new Exception("We should deref this. Probably");
+                throw new UnreachableException("We expect no unresolved references");
             }
 
             if (path.Value.Reference is not null)
-            {
-                throw new Exception("Do we have to deref this?");
+            { 
+                throw new UnreachableException("We expect no unresolved references");
             }
 
             foreach (var operation in path.Value.Operations)
@@ -124,7 +125,7 @@ public static class OpenApiExt
             {
                 if (operation.Value.RequestBody.UnresolvedReference || operation.Value.RequestBody.Reference is not null)
                 {
-                    throw new NotImplementedException("try deref");
+                    throw new UnreachableException("We expect no unresolved references.");
                 }
 
                 foreach (var requestContent in operation.Value.RequestBody.Content)
@@ -141,15 +142,13 @@ public static class OpenApiExt
                     continue;
                 }
                 
-                if (response.Value.UnresolvedReference &&
-                    response.Value.Reference is not null)
+                if (response.Value.UnresolvedReference && response.Value.Reference is not null)
                 {
-                    throw new NotImplementedException("try deref");
+                    throw new UnreachableException("We expect no unresolved references.");
                 }
 
                 foreach (var content in response.Value.Content)
                 {
-                    // Todo only filter application/json application/text here?
                     set.AddRecursive(content.Value.Schema);
                 }
             }

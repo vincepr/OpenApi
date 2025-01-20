@@ -267,16 +267,16 @@ public class ApiSerializer
     private string MapType(OpenApiSchema schema)
         => schema switch
         {
-            // TODO - add enum support here?  - maybe (inline enum?)
-            { Type: "object", } => schema.Reference?.Id ?? HandleInlineObject(schema),
-            { Type: "string", } => GetString(schema, schema.Format),
+            // got "string," and other bad types that i want to "successfully" guess.
+            { Type: { } type } when type.Contains("object") => schema.Reference?.Id ?? HandleInlineObject(schema),
+            { Type: { } type } when type.Contains("string") => GetString(schema, schema.Format),
             { Type: "integer", Format: "int32" } or { Type: "number", Format: "int32" } => "int",
             { Type: "integer", Format: "int64" } or { Type: "number", Format: "int64" } => "long",
-            { Type: "integer", } => "int",
+            { Type: "integer", } or { Type: "int" } => "int",
             { Type: "number", Format: "double" } => "double",
-            { Type: "number", Format: "float" } => "float",
+            { Type: "number", Format: "float" } or { Type: "float" } => "float",
             { Type: "number", Format: "decimal" } => "decimal",
-            { Type: "number", } => "double",
+            { Type: "number", } or { Type: "double" } => "double",
             { Type: "boolean", } or { Type: "bool" } => "bool",
             { Type: "array", } =>
                 schema.Items is null
@@ -336,7 +336,7 @@ public class ApiSerializer
         foreach (var error in serializer.Errors) Console.Error.WriteLine(error);
         return serializer.Build();
     }
-    
+
     public static (string Text, IReadOnlyList<string> Errors) SerializeWithErrors(
         IEnumerable<OpenApiSchema> schemata, OpenApiDiagnostic? diagnostic, ApiSerializerConfig? config = default)
     {
